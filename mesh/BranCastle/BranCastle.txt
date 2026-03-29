@@ -1,0 +1,172 @@
+{
+    "render_list": [
+        "BRANCASTLE_SkySphere",
+        "BRANCASTLE_Lightning",
+        "BRANCASTLE_CloudsA",
+        "BRANCASTLE_CloudsB",
+        "BRANCASTLE_VortexA",
+        "BRANCASTLE_VortexB",
+        "BRANCASTLE_MountainPeak",
+        "BRANCASTLE_MountainRangeA",
+        "BRANCASTLE_MountainRangeB",
+        "BRANCASTLE_River"
+    ],
+    "rotation": {
+        "BRANCASTLE_CloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "BRANCASTLE_CloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "BRANCASTLE_Lightning": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "BRANCASTLE_MountainPeak": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "BRANCASTLE_MountainRangeA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "BRANCASTLE_MountainRangeB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "BRANCASTLE_River": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "BRANCASTLE_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "BRANCASTLE_VortexA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "BRANCASTLE_VortexB": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "BRANCASTLE_CloudsA": -60.0,
+        "BRANCASTLE_CloudsB": -60.0,
+        "BRANCASTLE_Lightning": -60.0,
+        "BRANCASTLE_MountainPeak": -60.0,
+        "BRANCASTLE_MountainRangeA": -60.0,
+        "BRANCASTLE_MountainRangeB": -60.0,
+        "BRANCASTLE_River": -60.0,
+        "BRANCASTLE_SkySphere": -60.0,
+        "BRANCASTLE_VortexA": -60.0,
+        "BRANCASTLE_VortexB": -60.0
+    },
+    "translation": {
+        "BRANCASTLE_CloudsA": [
+            0.0,
+            15,
+            0.0
+        ],
+        "BRANCASTLE_CloudsB": [
+            0.0,
+            15,
+            0.0
+        ],
+        "BRANCASTLE_Lightning": [
+            0.0,
+            15,
+            0.0
+        ],
+        "BRANCASTLE_MountainPeak": [
+            0.0,
+           15,
+            0.0
+        ],
+        "BRANCASTLE_MountainRangeA": [
+            0.0,
+            15,
+            0.0
+        ],
+        "BRANCASTLE_MountainRangeB": [
+            0.0,
+            15,
+            0.0
+        ],
+        "BRANCASTLE_River": [
+            0.0,
+            15,
+            0.0
+        ],
+        "BRANCASTLE_SkySphere": [
+            0.0,
+          15,
+            0.0
+        ],
+        "BRANCASTLE_VortexA": [
+            0.0,
+            15,
+            0.0
+        ],
+        "BRANCASTLE_VortexB": [
+            0.0,
+            15,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "BRANCASTLE_CloudsA": [
+            0.0006,
+            -0.0012
+        ],
+        "BRANCASTLE_CloudsB": [
+            0.0006,
+            -0.0012
+        ],
+        "BRANCASTLE_Lightning": [
+            0.004,
+            0.0025
+        ],
+        "BRANCASTLE_MountainPeak": [
+            0.0,
+            0.0
+        ],
+        "BRANCASTLE_MountainRangeA": [
+            0.0,
+            0.0
+        ],
+        "BRANCASTLE_MountainRangeB": [
+            0.0,
+            0.0
+        ],
+        "BRANCASTLE_River": [
+            0.0,
+            0.0
+        ],
+        "BRANCASTLE_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "BRANCASTLE_VortexA": [
+          -0.0006,
+            0.0006
+        ],
+        "BRANCASTLE_VortexB": [
+            -0.0006,
+            0.0006
+        ]
+    }
+}

@@ -1,0 +1,1 @@
+particle_lut_vert = '\n#version 110\n\nvarying vec2 tex_coord;\n\nvarying float time;\n\nvoid main()\n{\n    time = gl_Vertex.w;\n\n    gl_Position = gl_ModelViewProjectionMatrix * vec4(gl_Vertex.xyz, 1.0);\n    gl_FrontColor = gl_Color;\n\n    tex_coord = gl_MultiTexCoord0.xy;\n}\n'

@@ -1,0 +1,188 @@
+{
+    "render_list": [
+        "UserUrban_SkySphere",
+        "UserUrban_SkyCloudsA",
+        "UserUrban_SkyCloudsB",
+        "UserUrban_SkyBG_Hills_A",
+        "UserUrban_SkyBG_Hills_B",
+        "UserUrban_SkyBG_Hills_B1",
+        "UserUrban_SkySmoke_05",
+        "UserUrban_SkySmoke_06",
+        "UserUrban_SkySmoke_04",
+        "UserUrban_SkySmoke_03",
+        "UserUrban_SkySmoke_02"
+    ],
+    "rotation": {
+        "UserUrban_SkyBG_Hills_A": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkyBG_Hills_B": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkyBG_Hills_B1": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_02": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_03": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_04": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_05": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_06": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserUrban_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "UserUrban_SkyBG_Hills_A": -60.0,
+        "UserUrban_SkyBG_Hills_B": -60.0,
+        "UserUrban_SkyBG_Hills_B1": -60.0,
+        "UserUrban_SkyCloudsA": -60.0,
+        "UserUrban_SkyCloudsB": -60.0,
+        "UserUrban_SkySmoke_02": -60.0,
+        "UserUrban_SkySmoke_03": -60.0,
+        "UserUrban_SkySmoke_04": -60.0,
+        "UserUrban_SkySmoke_05": -60.0,
+        "UserUrban_SkySmoke_06": -60.0,
+        "UserUrban_SkySphere": -60.0
+    },
+    "translation": {
+        "UserUrban_SkyBG_Hills_A": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkyBG_Hills_B": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkyBG_Hills_B1": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkyCloudsA": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkyCloudsB": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_02": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_03": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_04": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_05": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkySmoke_06": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserUrban_SkySphere": [
+            0.0,
+            15.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "UserUrban_SkyBG_Hills_A": [
+            0.0,
+            0.0
+        ],
+        "UserUrban_SkyBG_Hills_B": [
+            0.0,
+            0.0
+        ],
+        "UserUrban_SkyBG_Hills_B1": [
+            0.0,
+            0.0
+        ],
+        "UserUrban_SkyCloudsA": [
+            -0.0005,
+            0.0002
+        ],
+        "UserUrban_SkyCloudsB": [
+            -0.0002,
+            0.0005
+        ],
+        "UserUrban_SkySmoke_02": [
+            0.0006,
+            0.0
+        ],
+        "UserUrban_SkySmoke_03": [
+            0.0007,
+            0.0
+        ],
+        "UserUrban_SkySmoke_04": [
+            0.0005,
+            0.0
+        ],
+        "UserUrban_SkySmoke_05": [
+            0.0008,
+            0.0
+        ],
+        "UserUrban_SkySmoke_06": [
+            0.0009,
+            0.0
+        ],
+        "UserUrban_SkySphere": [
+            0.0,
+            0.0
+        ]
+    }
+}

@@ -1,0 +1,15 @@
+{
+'name': 'CLASSIC_CTF_TITLE',
+'modes': ['ctf'],
+'ugc_modes': [],
+'maps': ['Crossroads', 'Hiesville', 'ToTheBridge', 'Trenches', 'WinterValley', 'WW1', 'Classic'],
+'classic': True,
+'mafia': False,
+'tutorial': False,
+'demo' : True,
+'players': [32],
+'config': { 'RULE_CTF_ENABLE_SHOOT_WITH_INTEL' : 'ON',
+            'RULE_CTF_ENABLE_INTEL_AUTO_RETURN' : 'OFF',
+            'RULE_ENABLE_WEAPON_CLASSIC_SMG' : 'OFF',
+            'RULE_ENABLE_WEAPON_CLASSIC_SHOTGUN' : 'OFF' }
+}

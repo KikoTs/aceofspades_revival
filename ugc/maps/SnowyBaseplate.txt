@@ -1,0 +1,21 @@
+name = 'Snowy'
+version = '1.0'
+author = 'Steve Thompson'
+description = 'Snowy'
+
+skybox_texture = 'ArcticBase.txt'
+fog_color = 114,174,175
+ambient_sounds = [
+    ['amb_arctic', [], 1.0, 0.0 ],
+    ]
+
+ground_colors = ((85,60,30, 32), (31,22,11, 238), (45,107,108, 239))
+
+ight_color = (230,230,255)
+fog_color = (114,174,175,)
+light_direction = (0.0,0.6,-0.4)
+back_light_direction = (0.6,-0.3,0)
+back_light_color = (10,10,30)
+ambient_light_color = (128,128,135)
+ambient_light_intensity = 0.35
+ground_colors = ((85,60,30, 32), (31,22,11, 238), (45,107,108, 239))

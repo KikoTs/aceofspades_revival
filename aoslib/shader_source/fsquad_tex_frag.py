@@ -1,0 +1,1 @@
+fsquad_tex_frag = '\n#version 110\n\nvarying vec2 texCoord;\n\nuniform sampler2D texture;\n\nvoid main() \n{\n    vec4 tex_col = texture2D(texture, texCoord);\n\n    gl_FragColor = (tex_col * gl_Color);\n}\n'

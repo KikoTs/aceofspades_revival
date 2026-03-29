@@ -1,0 +1,21 @@
+name = 'Mountain'
+author = 'SteveT'
+Description = 'Mountain'
+version = '1.0'
+fog_color = 30,30,30
+skybox_texture = 'User_Mountain.txt'
+static_light_color0 = (255,231,1)
+
+ambient_sounds = [
+    ['amb_castula', [], 1.0, 0.0 ],
+    ]
+
+light_color = (175,215,215)
+fog_color = (50,59,61)
+light_direction = (0.1,0.4,0.7)
+back_light_direction = (0.6,-0.1,-0.1)
+back_light_color = (37,20,46)
+ambient_light_color = (20,30,20)
+ambient_light_intensity = 0.15
+ground_colors = ((85,60,30, 32), (31,22,11, 238), (87,96,96, 239))
+

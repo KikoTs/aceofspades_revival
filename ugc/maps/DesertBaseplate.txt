@@ -1,0 +1,24 @@
+name = 'Desert'
+version = '1.0'
+Description = 'Desert'
+author = 'B Hewitt'
+description = 'Map by Beck & Painted by SIT'
+skybox_texture = 'User_Desert.txt'
+
+fog_color = 168,134,109
+
+ac_debug = False
+
+ambient_sounds = [
+    ['amb_desert', [], 1.0, 0.0 ],
+    ]
+
+ground_colors = ((247, 170, 84, 238), (247, 157, 69, 239))
+
+light_color = (255,255,225)
+fog_color = (195,116,77)
+light_direction = (0.5,0.75,1)
+back_light_direction = (0.3,-1,-0.1)
+back_light_color = (128,100,40)
+ambient_light_color = (128,100,40)
+ambient_light_intensity = 0.2

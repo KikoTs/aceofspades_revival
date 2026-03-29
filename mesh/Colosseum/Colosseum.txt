@@ -1,0 +1,188 @@
+{
+    "render_list": [
+        "Colosseum_SkySphere",
+        "Colosseum_ROME",
+        "Colosseum_SandDunesA",
+        "Colosseum_SandDunesB",
+        "Colosseum_SandstormA",
+        "Colosseum_SandstormB",
+        "Colosseum_SkyCloudsA",
+        "Colosseum_SkyCloudsB",
+        "Colosseum_SkySunBeamsA",
+        "Colosseum_SkySunBeamsB",
+        "Colosseum_SkySun"
+    ],
+    "rotation": {
+        "Colosseum_ROME": [
+            180.0,
+            45.0,
+            0.0
+        ],
+        "Colosseum_SandDunesA": [
+            180.0,
+           45.0,
+            0.0
+        ],
+        "Colosseum_SandDunesB": [
+            180.0,
+           45.0,
+            0.0
+        ],
+        "Colosseum_SandstormA": [
+            180.0,
+           45.0,
+            0.0
+        ],
+        "Colosseum_SandstormB": [
+            180.0,
+           45.0,
+            0.0
+        ],
+        "Colosseum_SkyCloudsA": [
+            180.0,
+           45.0,
+            0.0
+        ],
+        "Colosseum_SkyCloudsB": [
+            180.0,
+           45.0,
+            0.0
+        ],
+        "Colosseum_SkySphere": [
+            180.0,
+           45.0,
+            0.0
+        ],
+        "Colosseum_SkySun": [
+            180.0,
+           45.0,
+            0.0
+        ],
+        "Colosseum_SkySunBeamsA": [
+            180.0,
+           45.0,
+            0.0
+        ],
+        "Colosseum_SkySunBeamsB": [
+            180.0,
+          45.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "Colosseum_ROME": -60.0,
+        "Colosseum_SandDunesA": -60.0,
+        "Colosseum_SandDunesB": -60.0,
+        "Colosseum_SandstormA": -60.0,
+        "Colosseum_SandstormB": -60.0,
+        "Colosseum_SkyCloudsA": -60.0,
+        "Colosseum_SkyCloudsB": -60.0,
+        "Colosseum_SkySphere": -60.0,
+        "Colosseum_SkySun": -60.0,
+        "Colosseum_SkySunBeamsA": -60.0,
+        "Colosseum_SkySunBeamsB": -60.0
+    },
+    "translation": {
+        "Colosseum_ROME": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "Colosseum_SandDunesA": [
+            0.0,
+          15.0,
+            0.0
+        ],
+        "Colosseum_SandDunesB": [
+            0.0,
+          15.0,
+            0.0
+        ],
+        "Colosseum_SandstormA": [
+            0.0,
+          15.0,
+            0.0
+        ],
+        "Colosseum_SandstormB": [
+            0.0,
+          15.0,
+            0.0
+        ],
+        "Colosseum_SkyCloudsA": [
+            0.0,
+          15.0,
+            0.0
+        ],
+        "Colosseum_SkyCloudsB": [
+            0.0,
+          15.0,
+            0.0
+        ],
+        "Colosseum_SkySphere": [
+            0.0,
+          15.0,
+            0.0
+        ],
+        "Colosseum_SkySun": [
+            0.0,
+          15.0,
+            0.0
+        ],
+        "Colosseum_SkySunBeamsA": [
+            0.0,
+          15.0,
+            0.0
+        ],
+        "Colosseum_SkySunBeamsB": [
+            0.0,
+          15.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "Colosseum_ROME": [
+            0.0,
+            0.0
+        ],
+        "Colosseum_SandDunesA": [
+            0.0,
+            0.0
+        ],
+        "Colosseum_SandDunesB": [
+            0.0,
+            0.0
+        ],
+        "Colosseum_SandstormA": [
+            0.0006,
+            0.0
+        ],
+        "Colosseum_SandstormB": [
+            0.0007,
+            0.0
+        ],
+        "Colosseum_SkyCloudsA": [
+            0.00035,
+            0.00025
+        ],
+        "Colosseum_SkyCloudsB": [
+            0.00025,
+            0.00035
+        ],
+        "Colosseum_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "Colosseum_SkySun": [
+            0.0,
+            0.0
+        ],
+        "Colosseum_SkySunBeamsA": [
+            0.005,
+            0.0
+        ],
+        "Colosseum_SkySunBeamsB": [
+            0.005,
+            0.0
+        ]
+    }
+}

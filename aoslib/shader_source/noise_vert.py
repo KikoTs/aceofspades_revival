@@ -1,0 +1,1 @@
+noise_vert = '\n#version 110\n\nvarying vec2 vertex_position;\n\nvoid main() {\n    vertex_position = gl_Vertex.xy;\n    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n    gl_FrontColor = gl_Color;\n}\n'

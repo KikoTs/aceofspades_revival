@@ -1,0 +1,22 @@
+name = 'Urban'
+version = '1.0'
+description = 'Urban'
+author = 'SteveT'
+skybox_texture = 'User_Urban.txt'
+
+static_light_color0 = (240,244,196)
+
+
+ambient_sounds = [
+    ['amb_ww_lighter', [], 1.0, 0.0 ],
+    ['em_river', [ (267,9,236-3), (238,171,236-3), (269,329,236-3), (276,492,236-3) ], 1.0, 1.0 ]
+    ]
+
+light_color = (180,192,220)
+fog_color = (128,128,127)
+light_direction = (0.0,0.8,0.2)
+back_light_direction = (0.3,-0.6,-0.1)
+back_light_color = (64,64,64)
+ambient_light_color = (52,56,64)
+ambient_light_intensity = 0.2
+ground_colors = ((85,60,30, 32), (31,22,11, 238), (90,109,114, 239))

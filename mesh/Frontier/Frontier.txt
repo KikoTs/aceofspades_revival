@@ -1,0 +1,204 @@
+{
+    "render_list": [
+        "FRONTIER_SkySphere",
+        "FRONTIER_Mesa_BG",
+        "FRONTIER_Mesa_MG",
+        "FRONTIER_SandDunesA",
+        "FRONTIER_SandDunesB",
+        "FRONTIER_SandstormA",
+        "FRONTIER_SandstormB",
+        "FRONTIER_SkyCloudsA",
+        "FRONTIER_SkyCloudsB",
+        "FRONTIER_SkySunBeamsA",
+        "FRONTIER_SkySunBeamsB",
+        "FRONTIER_SkySun"
+    ],
+    "rotation": {
+        "FRONTIER_Mesa_BG": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_Mesa_MG": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SandDunesA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SandDunesB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SandstormA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SandstormB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SkySun": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SkySunBeamsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "FRONTIER_SkySunBeamsB": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "FRONTIER_Mesa_BG": -60.0,
+        "FRONTIER_Mesa_MG": -60.0,
+        "FRONTIER_SandDunesA": -60.0,
+        "FRONTIER_SandDunesB": -60.0,
+        "FRONTIER_SandstormA": -60.0,
+        "FRONTIER_SandstormB": -60.0,
+        "FRONTIER_SkyCloudsA": -60.0,
+        "FRONTIER_SkyCloudsB": -60.0,
+        "FRONTIER_SkySphere": -60.0,
+        "FRONTIER_SkySun": -60.0,
+        "FRONTIER_SkySunBeamsA": -60.0,
+        "FRONTIER_SkySunBeamsB": -60.0
+    },
+    "translation": {
+        "FRONTIER_Mesa_BG": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_Mesa_MG": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SandDunesA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SandDunesB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SandstormA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SandstormB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SkyCloudsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SkyCloudsB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SkySphere": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SkySun": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SkySunBeamsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SkySunBeamsB": [
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "FRONTIER_Mesa_BG": [
+            0.0,
+            0.0
+        ],
+        "FRONTIER_Mesa_MG": [
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SandDunesA": [
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SandDunesB": [
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SandstormA": [
+            0.0007,
+            0.0
+        ],
+        "FRONTIER_SandstormB": [
+            0.0006,
+            0.0
+        ],
+        "FRONTIER_SkyCloudsA": [
+            0.00035,
+            0.00025
+        ],
+        "FRONTIER_SkyCloudsB": [
+            0.00025,
+            0.00035
+        ],
+        "FRONTIER_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SkySun": [
+            0.0,
+            0.0
+        ],
+        "FRONTIER_SkySunBeamsA": [
+            0.005,
+            0.0
+        ],
+        "FRONTIER_SkySunBeamsB": [
+            0.005,
+            0.0
+        ]
+    }
+}

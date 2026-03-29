@@ -1,0 +1,12 @@
+{
+'name': 'UGC_MODE_TITLE',
+'modes': ['ugc'],
+'ugc_modes': ['tdm'],
+'maps': ['DesertBaseplate', 'LunarBaseplate', 'MountainBaseplate', 'GrasslandBaseplate', 'Templebaseplate', 'UrbanBaseplate', 'MarshTemplate', 'SnowyBaseplate', 'WaterBaseplate'],
+'classic': False,
+'mafia': False,
+'tutorial': False,
+'demo' : False,
+'players': [12],
+'config': {}
+}

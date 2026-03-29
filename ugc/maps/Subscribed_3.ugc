@@ -1,0 +1,917 @@
+{
+    "use_overhead_image": false, 
+    "description": "The Inception", 
+    "title": "The Inception", 
+    "ugc_entities": [
+        {
+            "position": [
+                213, 
+                213, 
+                92
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                214, 
+                213, 
+                92
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                255, 
+                212, 
+                92
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                255, 
+                210, 
+                92
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                304, 
+                284, 
+                85
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                306, 
+                284, 
+                85
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                215, 
+                213, 
+                92
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                254, 
+                210, 
+                92
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                308, 
+                248, 
+                78
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                308, 
+                247, 
+                78
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                308, 
+                246, 
+                78
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                314, 
+                317, 
+                83
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                315, 
+                318, 
+                83
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                316, 
+                319, 
+                83
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                217, 
+                293, 
+                84
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                217, 
+                292, 
+                84
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                217, 
+                291, 
+                84
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                207, 
+                333, 
+                89
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                206, 
+                333, 
+                89
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                208, 
+                333, 
+                89
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                257, 
+                317, 
+                82
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                257, 
+                318, 
+                82
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                257, 
+                319, 
+                81
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                261, 
+                279, 
+                72
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                261, 
+                280, 
+                72
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                261, 
+                281, 
+                72
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                182, 
+                369, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                183, 
+                369, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                184, 
+                369, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                258, 
+                375, 
+                220
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                259, 
+                375, 
+                220
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                260, 
+                375, 
+                220
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                341, 
+                269, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                341, 
+                268, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                341, 
+                267, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                331, 
+                194, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                330, 
+                195, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                329, 
+                196, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                178, 
+                204, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                179, 
+                205, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                180, 
+                206, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                128, 
+                284, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                127, 
+                283, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                126, 
+                282, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                224, 
+                134, 
+                213
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                223, 
+                134, 
+                213
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                222, 
+                134, 
+                213
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                264, 
+                433, 
+                220
+            ], 
+            "mode": "zom", 
+            "item": "ugc_spawngreen_med"
+        }, 
+        {
+            "position": [
+                249, 
+                433, 
+                220
+            ], 
+            "mode": "zom", 
+            "item": "ugc_spawngreen_med"
+        }, 
+        {
+            "position": [
+                257, 
+                281, 
+                104
+            ], 
+            "mode": "zom", 
+            "item": "ugc_spawnblue_large"
+        }, 
+        {
+            "position": [
+                253, 
+                426, 
+                220
+            ], 
+            "mode": "vip", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                259, 
+                426, 
+                220
+            ], 
+            "mode": "vip", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                267, 
+                426, 
+                220
+            ], 
+            "mode": "vip", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                262, 
+                461, 
+                201
+            ], 
+            "mode": "vip", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                426, 
+                219, 
+                216
+            ], 
+            "mode": "vip", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                419, 
+                237, 
+                201
+            ], 
+            "mode": "vip", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                381, 
+                223, 
+                230
+            ], 
+            "mode": "vip", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                240, 
+                197, 
+                227
+            ], 
+            "mode": "oc", 
+            "item": "ugc_bomb_drop"
+        }, 
+        {
+            "position": [
+                177, 
+                281, 
+                230
+            ], 
+            "mode": "oc", 
+            "item": "ugc_bomb_drop"
+        }, 
+        {
+            "position": [
+                258, 
+                370, 
+                220
+            ], 
+            "mode": "oc", 
+            "item": "ugc_bomb_drop"
+        }, 
+        {
+            "position": [
+                409, 
+                224, 
+                218
+            ], 
+            "mode": "oc", 
+            "item": "ugc_basegreen_large"
+        }, 
+        {
+            "position": [
+                294, 
+                246, 
+                90
+            ], 
+            "mode": "mh", 
+            "item": "ugc_base_large"
+        }, 
+        {
+            "position": [
+                214, 
+                292, 
+                96
+            ], 
+            "mode": "mh", 
+            "item": "ugc_base_large"
+        }, 
+        {
+            "position": [
+                302, 
+                316, 
+                96
+            ], 
+            "mode": "mh", 
+            "item": "ugc_spawngreen_med"
+        }, 
+        {
+            "position": [
+                241, 
+                237, 
+                84
+            ], 
+            "mode": "mh", 
+            "item": "ugc_spawnblue_med"
+        }, 
+        {
+            "position": [
+                246, 
+                243, 
+                206
+            ], 
+            "mode": "oc", 
+            "item": "ugc_spawnblue_large"
+        }, 
+        {
+            "position": [
+                389, 
+                347, 
+                230
+            ], 
+            "mode": "oc", 
+            "item": "ugc_spawngreen_med"
+        }, 
+        {
+            "position": [
+                256, 
+                466, 
+                220
+            ], 
+            "mode": "dem", 
+            "item": "ugc_baseblue_large"
+        }, 
+        {
+            "position": [
+                412, 
+                221, 
+                216
+            ], 
+            "mode": "dem", 
+            "item": "ugc_basegreen_large"
+        }, 
+        {
+            "position": [
+                420, 
+                221, 
+                216
+            ], 
+            "mode": "dem", 
+            "item": "ugc_spawngreen_large"
+        }, 
+        {
+            "position": [
+                256, 
+                467, 
+                220
+            ], 
+            "mode": "dem", 
+            "item": "ugc_spawnblue_large"
+        }, 
+        {
+            "position": [
+                239, 
+                298, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                238, 
+                298, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                237, 
+                298, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                234, 
+                196, 
+                227
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                234, 
+                197, 
+                227
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                234, 
+                198, 
+                227
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                209, 
+                291, 
+                199
+            ], 
+            "mode": "tc", 
+            "item": "ugc_base_med"
+        }, 
+        {
+            "position": [
+                263, 
+                282, 
+                229
+            ], 
+            "mode": "tc", 
+            "item": "ugc_base_med"
+        }, 
+        {
+            "position": [
+                299, 
+                247, 
+                148
+            ], 
+            "mode": "tc", 
+            "item": "ugc_base_med"
+        }, 
+        {
+            "position": [
+                346, 
+                387, 
+                195
+            ], 
+            "mode": "tc", 
+            "item": "ugc_base_med"
+        }, 
+        {
+            "position": [
+                181, 
+                397, 
+                228
+            ], 
+            "mode": "tc", 
+            "item": "ugc_spawnblue_large"
+        }, 
+        {
+            "position": [
+                220, 
+                135, 
+                219
+            ], 
+            "mode": "tc", 
+            "item": "ugc_spawngreen_med"
+        }, 
+        {
+            "position": [
+                131, 
+                284, 
+                230
+            ], 
+            "mode": "tdm", 
+            "item": "ugc_spawngreen_large"
+        }, 
+        {
+            "position": [
+                406, 
+                221, 
+                216
+            ], 
+            "mode": "tdm", 
+            "item": "ugc_spawnblue_large"
+        }, 
+        {
+            "position": [
+                300, 
+                247, 
+                148
+            ], 
+            "mode": "dia", 
+            "item": "ugc_base_small"
+        }, 
+        {
+            "position": [
+                262, 
+                281, 
+                172
+            ], 
+            "mode": "dia", 
+            "item": "ugc_base_small"
+        }, 
+        {
+            "position": [
+                213, 
+                292, 
+                147
+            ], 
+            "mode": "dia", 
+            "item": "ugc_base_small"
+        }, 
+        {
+            "position": [
+                171, 
+                191, 
+                229
+            ], 
+            "mode": "dia", 
+            "item": "ugc_spawnblue_med"
+        }, 
+        {
+            "position": [
+                348, 
+                297, 
+                230
+            ], 
+            "mode": "dia", 
+            "item": "ugc_spawngreen_large"
+        }, 
+        {
+            "position": [
+                398, 
+                217, 
+                216
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                398, 
+                218, 
+                216
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                398, 
+                219, 
+                216
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                215, 
+                292, 
+                102
+            ], 
+            "mode": "ctf", 
+            "item": "ugc_baseblue_med"
+        }, 
+        {
+            "position": [
+                295, 
+                247, 
+                102
+            ], 
+            "mode": "ctf", 
+            "item": "ugc_basegreen_med"
+        }, 
+        {
+            "position": [
+                215, 
+                291, 
+                96
+            ], 
+            "mode": "ctf", 
+            "item": "ugc_spawnblue_med"
+        }, 
+        {
+            "position": [
+                297, 
+                246, 
+                96
+            ], 
+            "mode": "ctf", 
+            "item": "ugc_spawngreen_med"
+        }
+    ], 
+    "ground_colors": [
+        [
+            85, 
+            60, 
+            30, 
+            32
+        ], 
+        [
+            31, 
+            22, 
+            11, 
+            238
+        ], 
+        [
+            90, 
+            109, 
+            114, 
+            239
+        ]
+    ], 
+    "skybox_name": "Chicago.txt", 
+    "aos_ugc_handle": 189298116, 
+    "author": "GSM.AnArChY", 
+    "baseplate": "UrbanBaseplate", 
+    "modified_since_publish": true, 
+    "tags": [
+        "map", 
+        "dem", 
+        "zom", 
+        "mh", 
+        "oc", 
+        "dia", 
+        "tdm", 
+        "vip", 
+        "ctf", 
+        "tc"
+    ]
+}

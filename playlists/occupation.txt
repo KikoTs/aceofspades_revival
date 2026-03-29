@@ -1,0 +1,12 @@
+{
+'name': 'OCCUPATION_MODE_TITLE',
+'modes': ['oc'],
+'ugc_modes': [],
+'maps': ['AncientEgypt', 'ArcticBase', 'Atlantis', 'BlockNess', 'BranCastle', 'DragonIsland', 'Frontier', 'GreatWall', 'Invasion', 'London', 'LunarBase', 'MayanJungle', 'SpookyMansion', 'TheColosseum'],
+'classic': False,
+'mafia': False,
+'tutorial': False,
+'demo' : False,
+'players': [16,20,24],
+'config': {}
+}

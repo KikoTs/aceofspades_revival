@@ -1,0 +1,188 @@
+{
+    "render_list": [
+        "INVASION_SkySphere",
+        "INVASION_Lightning",
+        "INVASION_clouds",
+        "INVASION_MountainPeak",
+        "INVASION_MountainRangeA",
+        "INVASION_MountainRangeB",
+        "INVASION_Volcano",
+        "INVASION_fireballs_A",
+        "INVASION_fireballs_B",
+	"INVASION_Pyroclastic",
+	"INVASION_PyroclasticB"
+    ],
+    "rotation": {
+        "INVASION_Lightning": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_MountainPeak": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_MountainRangeA": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_MountainRangeB": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_Pyroclastic": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_PyroclasticB": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_SkySphere": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_Volcano": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_clouds": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_fireballs_A": [
+            180.0,
+            90.0,
+            0.0
+        ],
+        "INVASION_fireballs_B": [
+            180.0,
+            90.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "INVASION_Lightning": -60.0,
+        "INVASION_MountainPeak": -60.0,
+        "INVASION_MountainRangeA": -60.0,
+        "INVASION_MountainRangeB": -60.0,
+        "INVASION_Pyroclastic": -60.0,
+        "INVASION_PyroclasticB": -60.0,
+        "INVASION_SkySphere": -60.0,
+        "INVASION_Volcano": -60.0,
+        "INVASION_clouds": -60.0,
+        "INVASION_fireballs_A": -60.0,
+        "INVASION_fireballs_B": -60.0
+    },
+    "translation": {
+        "INVASION_Lightning": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_MountainPeak": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_MountainRangeA": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_MountainRangeB": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_Pyroclastic": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_PyroclasticB": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_SkySphere": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_Volcano": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_clouds": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_fireballs_A": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "INVASION_fireballs_B": [
+            0.0,
+            20.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "INVASION_Lightning": [
+            0.001,
+            0.002
+        ],
+        "INVASION_MountainPeak": [
+            0.0,
+            0.0
+        ],
+        "INVASION_MountainRangeA": [
+            0.0,
+            0.0
+        ],
+        "INVASION_MountainRangeB": [
+            0.0,
+            0.0
+        ],
+        "INVASION_Pyroclastic": [
+            0.0,
+            -0.001
+        ],
+        "INVASION_PyroclasticB": [
+            0.0,
+            -0.0015
+        ],
+        "INVASION_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "INVASION_Volcano": [
+            0.0,
+            0.0
+        ],
+        "INVASION_clouds": [
+            0.00022,
+            0.000085
+        ],
+        "INVASION_fireballs_A": [
+            0.0,
+            0.0025
+        ],
+        "INVASION_fireballs_B": [
+            0.0,
+            0.0015
+        ]
+    }
+}

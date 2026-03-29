@@ -1,0 +1,12 @@
+{
+'name': 'VIP_MODE_TITLE',
+'modes': ['vip'],
+'ugc_modes': [],
+'maps': ['Alcatraz', 'CityOfChicago'],
+'classic': False,
+'mafia': True,
+'tutorial': False,
+'demo' : False,
+'players': [16,20,24],
+'config': {}
+}

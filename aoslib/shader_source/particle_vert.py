@@ -1,0 +1,1 @@
+particle_vert = '\n#version 110\n\nvarying vec2 tex_coord;\n\nvoid main()\n{\n    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n    gl_FrontColor = gl_Color;\n\n    tex_coord = gl_MultiTexCoord0.xy;\n}\n'

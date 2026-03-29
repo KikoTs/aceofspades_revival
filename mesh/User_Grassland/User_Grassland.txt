@@ -1,0 +1,60 @@
+{
+    "render_list": [
+        "UserGrassland_Skysphere",
+        "UserGrassland_SKYCloudsA",
+        "UserGrassland_SKYCloudsB"
+    ],
+    "rotation": {
+        "UserGrassland_SKYCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserGrassland_SKYCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserGrassland_Skysphere": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "UserGrassland_SKYCloudsA": -60.0,
+        "UserGrassland_SKYCloudsB": -60.0,
+        "UserGrassland_Skysphere": -60.0
+    },
+    "translation": {
+        "UserGrassland_SKYCloudsA": [
+            0.0,
+            15,
+            0.0
+        ],
+        "UserGrassland_SKYCloudsB": [
+            0.0,
+            15,
+            0.0
+        ],
+        "UserGrassland_Skysphere": [
+            0.0,
+            15,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "UserGrassland_SKYCloudsA": [
+            0.0,
+            0.0
+        ],
+        "UserGrassland_SKYCloudsB": [
+            0.00025,
+            0.0003
+        ],
+        "UserGrassland_Skysphere": [
+            0.0002,
+            0.00025
+        ]
+    }
+}

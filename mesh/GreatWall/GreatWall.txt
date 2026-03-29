@@ -1,0 +1,156 @@
+{
+    "render_list": [
+        "GreatWall_SkySphere",
+        "GreatWall_mountainsA",
+        "GreatWall_mistA",
+        "GreatWall_mountainsB",
+        "GreatWall_mistB",
+        "GreatWall_SkyCloudsA",
+        "GreatWall_SkyCloudsB",
+        "GreatWall_SunBeams",
+        "GreatWall_SUN"
+    ],
+    "rotation": {
+        "GreatWall_SUN": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "GreatWall_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "GreatWall_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "GreatWall_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "GreatWall_SunBeams": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "GreatWall_mistA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "GreatWall_mistB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "GreatWall_mountainsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "GreatWall_mountainsB": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "GreatWall_SUN": -60.0,
+        "GreatWall_SkyCloudsA": -60.0,
+        "GreatWall_SkyCloudsB": -60.0,
+        "GreatWall_SkySphere": -60.0,
+        "GreatWall_SunBeams": -60.0,
+        "GreatWall_mistA": -60.0,
+        "GreatWall_mistB": -60.0,
+        "GreatWall_mountainsA": -60.0,
+        "GreatWall_mountainsB": -60.0
+    },
+    "translation": {
+        "GreatWall_SUN": [
+            0.0,
+            -15.0,
+            0.0
+        ],
+        "GreatWall_SkyCloudsA": [
+            0.0,
+            -15.0,
+            0.0
+        ],
+        "GreatWall_SkyCloudsB": [
+            0.0,
+            -15.0,
+            0.0
+        ],
+        "GreatWall_SkySphere": [
+            0.0,
+            -15.0,
+            0.0
+        ],
+        "GreatWall_SunBeams": [
+            0.0,
+            -15.0,
+            0.0
+        ],
+        "GreatWall_mistA": [
+            0.0,
+            -15.0,
+            0.0
+        ],
+        "GreatWall_mistB": [
+            0.0,
+            -15.0,
+            0.0
+        ],
+        "GreatWall_mountainsA": [
+            0.0,
+            -15.0,
+            0.0
+        ],
+        "GreatWall_mountainsB": [
+            0.0,
+            -15.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "GreatWall_SUN": [
+            0.0,
+            0.0
+        ],
+        "GreatWall_SkyCloudsA": [
+            0.0003,
+            -0.0001
+        ],
+        "GreatWall_SkyCloudsB": [
+            0.0002,
+            0.00015
+        ],
+        "GreatWall_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "GreatWall_SunBeams": [
+            0.0,
+            -0.0025
+        ],
+        "GreatWall_mistA": [
+            0.0005,
+            0.0
+        ],
+        "GreatWall_mistB": [
+            0.00075,
+            0.0
+        ],
+        "GreatWall_mountainsA": [
+            0.0,
+            0.0
+        ],
+        "GreatWall_mountainsB": [
+            0.0,
+            0.0
+        ]
+    }
+}

@@ -1,0 +1,157 @@
+{
+    "render_list": [
+       
+        "ARCTIC_SkySphere",
+        "ARCTIC_Stars",
+	"ARCTIC_AuroraA",
+        "ARCTIC_AuroraB",
+        "ARCTIC_SkyCloudsA",
+        "ARCTIC_SkyCloudsB",
+        "ARCTIC_MountainsBG",
+        "ARCTIC_FreezingFog",
+        "ARCTIC_Iceburgs"
+    ],
+    "rotation": {
+        "ARCTIC_AuroraA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ARCTIC_AuroraB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ARCTIC_FreezingFog": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ARCTIC_Iceburgs": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ARCTIC_MountainsBG": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ARCTIC_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ARCTIC_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ARCTIC_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ARCTIC_Stars": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "ARCTIC_AuroraA": -60.0,
+        "ARCTIC_AuroraB": -60.0,
+        "ARCTIC_FreezingFog": -60.0,
+        "ARCTIC_Iceburgs": -60.0,
+        "ARCTIC_MountainsBG": -60.0,
+        "ARCTIC_SkyCloudsA": -60.0,
+        "ARCTIC_SkyCloudsB": -60.0,
+        "ARCTIC_SkySphere": -60.0,
+        "ARCTIC_Stars": -60.0
+    },
+    "translation": {
+        "ARCTIC_AuroraA": [
+            0.0,
+            15,
+            0.0
+        ],
+        "ARCTIC_AuroraB": [
+            0.0,
+        15,
+            0.0
+        ],
+        "ARCTIC_FreezingFog": [
+            0.0,
+            15,
+            0.0
+        ],
+        "ARCTIC_Iceburgs": [
+            0.0,
+            10,
+            0.0
+        ],
+        "ARCTIC_MountainsBG": [
+            0.0,
+            10,
+            0.0
+        ],
+        "ARCTIC_SkyCloudsA": [
+            0.0,
+            15,
+            0.0
+        ],
+        "ARCTIC_SkyCloudsB": [
+            0.0,
+            15,
+            0.0
+        ],
+        "ARCTIC_SkySphere": [
+            0.0,
+            0,
+            0.0
+        ],
+        "ARCTIC_Stars": [
+            0.0,
+            15,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "ARCTIC_AuroraA": [
+            -0.0002,
+            0.0
+        ],
+        "ARCTIC_AuroraB": [
+            0.0002,
+            0.0
+        ],
+        "ARCTIC_FreezingFog": [
+            0.0004,
+            0.0
+        ],
+        "ARCTIC_Iceburgs": [
+            -0.00010,
+            0.0
+        ],
+        "ARCTIC_MountainsBG": [
+            0.0,
+            0.0
+        ],
+        "ARCTIC_SkyCloudsA": [
+            -0.00016,
+            0.00016
+        ],
+        "ARCTIC_SkyCloudsB": [
+            -0.0002,
+           0.0002	
+        ],
+        "ARCTIC_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "ARCTIC_Stars": [
+            -0.00064,
+            -0.00064
+        ]
+    }
+}

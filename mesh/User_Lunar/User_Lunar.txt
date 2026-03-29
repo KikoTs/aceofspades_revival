@@ -1,0 +1,156 @@
+{
+    "render_list": [
+        "UserLunar_SkySphere",
+        "UserLunar_Stars",
+        "UserLunar_SunBeams",
+        "UserLunar_SUN",
+        "UserLunar_Comet",
+        "UserLunar_Earth",
+        "UserLunar_Clouds",
+        "UserLunar_EarthGlow",
+        "UserLunar_Mountains"
+    ],
+    "rotation": {
+        "UserLunar_Clouds": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserLunar_Comet": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserLunar_Earth": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserLunar_EarthGlow": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserLunar_Mountains": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserLunar_SUN": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserLunar_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserLunar_Stars": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserLunar_SunBeams": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "UserLunar_Clouds": -60.0,
+        "UserLunar_Comet": -60.0,
+        "UserLunar_Earth": -60.0,
+        "UserLunar_EarthGlow": -60.0,
+        "UserLunar_Mountains": -60.0,
+        "UserLunar_SUN": -60.0,
+        "UserLunar_SkySphere": -60.0,
+        "UserLunar_Stars": -60.0,
+        "UserLunar_SunBeams": -60.0
+    },
+    "translation": {
+        "UserLunar_Clouds": [
+            0.0,
+            20,
+            0.0
+        ],
+        "UserLunar_Comet": [
+            0.0,
+            20,
+            0.0
+        ],
+        "UserLunar_Earth": [
+            0.0,
+            20,
+            0.0
+        ],
+        "UserLunar_EarthGlow": [
+            0.0,
+            20,
+            0.0
+        ],
+        "UserLunar_Mountains": [
+            0.0,
+            20,
+            0.0
+        ],
+        "UserLunar_SUN": [
+            0.0,
+            20,
+            0.0
+        ],
+        "UserLunar_SkySphere": [
+            0.0,
+            20,
+            0.0
+        ],
+        "UserLunar_Stars": [
+            0.0,
+            20,
+            0.0
+        ],
+        "UserLunar_SunBeams": [
+            0.0,
+            20,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "UserLunar_Clouds": [
+            -0.00015,
+            0.0
+        ],
+        "UserLunar_Comet": [
+            -0.00035,
+            0.0
+        ],
+        "UserLunar_Earth": [
+            -0.0001,
+            0.0
+        ],
+        "UserLunar_EarthGlow": [
+            0.0,
+            0.0
+        ],
+        "UserLunar_Mountains": [
+            0.0,
+            0.0
+        ],
+        "UserLunar_SUN": [
+            0.0,
+            0.0
+        ],
+        "UserLunar_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "UserLunar_Stars": [
+            0.0001,
+            0.00025
+        ],
+        "UserLunar_SunBeams": [
+            0.00045,
+            0.0
+        ]
+    }
+}

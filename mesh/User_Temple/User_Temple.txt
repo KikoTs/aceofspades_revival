@@ -1,0 +1,188 @@
+{
+    "render_list": [
+        "UserTemple_SkySphere",
+        "UserTemple_Lightning",
+        "UserTemple_clouds",
+        "UserTemple_MountainPeak",
+        "UserTemple_MountainRangeA",
+        "UserTemple_MountainRangeB",
+        "UserTemple_Volcano",
+        "UserTemple_fireballs_A",
+        "UserTemple_fireballs_B",
+        "UserTemple_Pyroclastic",
+        "UserTemple_PyroclasticB"
+    ],
+    "rotation": {
+        "UserTemple_Lightning": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_MountainPeak": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_MountainRangeA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_MountainRangeB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_Pyroclastic": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_PyroclasticB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_Volcano": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_clouds": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_fireballs_A": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserTemple_fireballs_B": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "UserTemple_Lightning": -60.0,
+        "UserTemple_MountainPeak": -60.0,
+        "UserTemple_MountainRangeA": -60.0,
+        "UserTemple_MountainRangeB": -60.0,
+        "UserTemple_Pyroclastic": -60.0,
+        "UserTemple_PyroclasticB": -60.0,
+        "UserTemple_SkySphere": -60.0,
+        "UserTemple_Volcano": -60.0,
+        "UserTemple_clouds": -60.0,
+        "UserTemple_fireballs_A": -60.0,
+        "UserTemple_fireballs_B": -60.0
+    },
+    "translation": {
+        "UserTemple_Lightning": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_MountainPeak": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_MountainRangeA": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_MountainRangeB": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_Pyroclastic": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_PyroclasticB": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_SkySphere": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_Volcano": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_clouds": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_fireballs_A": [
+            0.0,
+            20.0,
+            0.0
+        ],
+        "UserTemple_fireballs_B": [
+            0.0,
+            20.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "UserTemple_Lightning": [
+            0.001,
+            0.002
+        ],
+        "UserTemple_MountainPeak": [
+            0.0,
+            0.0
+        ],
+        "UserTemple_MountainRangeA": [
+            0.0,
+            0.0
+        ],
+        "UserTemple_MountainRangeB": [
+            0.0,
+            0.0
+        ],
+        "UserTemple_Pyroclastic": [
+            0.0,
+            -0.001
+        ],
+        "UserTemple_PyroclasticB": [
+            0.0,
+            -0.0015
+        ],
+        "UserTemple_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "UserTemple_Volcano": [
+            0.0,
+            0.0
+        ],
+        "UserTemple_clouds": [
+            0.00022,
+            0.000085
+        ],
+        "UserTemple_fireballs_A": [
+            0.0,
+            0.0025
+        ],
+        "UserTemple_fireballs_B": [
+            0.0,
+            0.0015
+        ]
+    }
+}

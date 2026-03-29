@@ -1,0 +1,12 @@
+{
+'name': 'ZOMBIE_MODE_TITLE',
+'modes': ['zom'],
+'ugc_modes': [],
+'maps': ['AncientEgypt', 'ArcticBase', 'Atlantis', 'BlockNess', 'BranCastle', 'CastleWars', 'DoubleDragon', 'DragonIsland', 'Frontier', 'GreatWall', 'Invasion', 'London', 'MayanJungle', 'SpookyMansion', 'TheColosseum', 'TokyoNeon'],
+'classic': False,
+'mafia': False,
+'tutorial': False,
+'demo' : False,
+'players': [16,20,24,24],
+'config' : {'RULE_CRATES_SPAWN_TIME' : '60'}
+}

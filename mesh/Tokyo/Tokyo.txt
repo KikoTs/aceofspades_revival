@@ -1,0 +1,156 @@
+{
+    "render_list": [
+        "TOKYO_skysphere",
+        "TOKYO_Stars",
+        "TOKYO_Moon",
+        "TOKYO_SkyCloudsA",
+        "TOKYO_SkyCloudsB",
+        "TOKYO_SkyCity_back",
+        "TOKYO_SKY_FogBank",
+        "TOKYO_SkyCity_fore",        
+        "TOKYO_SKY_FogBank1"
+    ],
+    "rotation": {
+        "TOKYO_Moon": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "TOKYO_SKY_FogBank": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "TOKYO_SKY_FogBank1": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "TOKYO_SkyCity_back": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "TOKYO_SkyCity_fore": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "TOKYO_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "TOKYO_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "TOKYO_Stars": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "TOKYO_skysphere": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "TOKYO_Moon": -60.0,
+        "TOKYO_SKY_FogBank": -60.0,
+        "TOKYO_SKY_FogBank1": -60.0,
+        "TOKYO_SkyCity_back": -60.0,
+        "TOKYO_SkyCity_fore": -60.0,
+        "TOKYO_SkyCloudsA": -60.0,
+        "TOKYO_SkyCloudsB": -60.0,
+        "TOKYO_Stars": -60.0,
+        "TOKYO_skysphere": -60.0
+    },
+    "translation": {
+        "TOKYO_Moon": [
+            0.0,
+            -30,
+            0.0
+        ],
+        "TOKYO_SKY_FogBank": [
+            0.0,
+            -30,
+            0.0
+        ],
+        "TOKYO_SKY_FogBank1": [
+            0.0,
+           -30,
+            0.0
+        ],
+        "TOKYO_SkyCity_back": [
+            0.0,
+            -30,
+            0.0
+        ],
+        "TOKYO_SkyCity_fore": [
+            0.0,
+            -30,
+            0.0
+        ],
+        "TOKYO_SkyCloudsA": [
+            0.0,
+            -30,
+            0.0
+        ],
+        "TOKYO_SkyCloudsB": [
+            0.0,
+            -30,
+            0.0
+        ],
+        "TOKYO_Stars": [
+            0.0,
+            -30,
+            0.0
+        ],
+        "TOKYO_skysphere": [
+            0.0,
+            -10,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "TOKYO_Moon": [
+            0.0,
+            0.0
+        ],
+        "TOKYO_SKY_FogBank": [
+            0.0004,
+            0.0
+        ],
+        "TOKYO_SKY_FogBank1": [
+            0.0004,
+            0.0
+        ],
+        "TOKYO_SkyCity_back": [
+            0.0,
+            0.0
+        ],
+        "TOKYO_SkyCity_fore": [
+            0.0,
+            0.0
+        ],
+        "TOKYO_SkyCloudsA": [
+            -0.00016,
+            0.00016
+        ],
+        "TOKYO_SkyCloudsB": [
+            -0.00012,
+            0.00012
+        ],
+        "TOKYO_Stars": [
+            -0.00064,
+            0.00064
+        ],
+        "TOKYO_skysphere": [
+            0.0,
+            0.0
+        ]
+    }
+}

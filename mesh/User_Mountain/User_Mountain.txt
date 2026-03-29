@@ -1,0 +1,140 @@
+{
+    "render_list": [
+        "UserMountain_SkySphere",
+        "UserMountain_Lightning",
+        "UserMountain_SKYCloudsA",
+        "UserMountain_SKYCloudsB",
+        "UserMountain_MountainRangeA",
+        "UserMountain_MountainRangeB",
+        "UserMountain_MountainPeak",
+        "UserMountain_River"
+    ],
+    "rotation": {
+        "UserMountain_Lightning": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserMountain_MountainPeak": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserMountain_MountainRangeA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserMountain_MountainRangeB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserMountain_River": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserMountain_SKYCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserMountain_SKYCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserMountain_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "UserMountain_Lightning": -60.0,
+        "UserMountain_MountainPeak": -60.0,
+        "UserMountain_MountainRangeA": -60.0,
+        "UserMountain_MountainRangeB": -60.0,
+        "UserMountain_River": -60.0,
+        "UserMountain_SKYCloudsA": -60.0,
+        "UserMountain_SKYCloudsB": -60.0,
+        "UserMountain_SkySphere": -60.0
+    },
+    "translation": {
+        "UserMountain_Lightning": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserMountain_MountainPeak": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserMountain_MountainRangeA": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserMountain_MountainRangeB": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserMountain_River": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserMountain_SKYCloudsA": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserMountain_SKYCloudsB": [
+            0.0,
+            15.0,
+            0.0
+        ],
+        "UserMountain_SkySphere": [
+            0.0,
+            15.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "UserMountain_Lightning": [
+            0.004,
+            0.0025
+        ],
+        "UserMountain_MountainPeak": [
+            0.0,
+            0.0
+        ],
+        "UserMountain_MountainRangeA": [
+            0.0,
+            0.0
+        ],
+        "UserMountain_MountainRangeB": [
+            0.0,
+            0.0
+        ],
+        "UserMountain_River": [
+            0.0,
+            0.0
+        ],
+        "UserMountain_SKYCloudsA": [
+            -0.00016,
+            0.00016
+        ],
+        "UserMountain_SKYCloudsB": [
+            -0.00012,
+            0.00012
+        ],
+        "UserMountain_SkySphere": [
+            0.0,
+            0.0
+        ]
+    }
+}

@@ -1,0 +1,264 @@
+from run import nick
+
+def SteamGetPersonaName():
+    return nick
+
+def SteamIsDemoRunning():
+    return False
+
+def SteamGetCurrentLobby():
+    return True
+
+def SteamGetLobbyOwner():
+    return True
+
+def SteamGetFriendPersonaName():
+    return True
+
+def SteamGetLobbyData(a, b):
+    print "SteamGetLobbyData:"
+    print [a, b]
+    return True
+
+def SteamSetLobbyData():
+    return True
+
+def SteamPublishUGC():
+    return True
+
+def GetPublishedUGCHandle():
+    return True
+
+def SteamGetSubscribedContentList():
+    return True
+
+def SteamGetSubscribedContentTagList():
+    return True
+
+def SteamExtractSubscribedContent():
+    return True
+
+def SteamAmITheLobbyOwner():
+    return True
+
+def SteamActivateGameOverlayToStore():
+    return True
+
+def SteamRegisterLobbyChatCallback(a):
+    print "SteamRegisterLobbyChatCallback"
+    print a
+    return True
+
+def SteamRegisterLobbyUpdateCallback(a, b, c):
+    print "SteamRegisterLobbyUpdateCallback:"
+    print [a, b, c]
+    return True
+
+def SteamRegisterLobbyJoinRequestCallback(a):
+    print "SteamRegisterLobbyJoinRequestCallback"
+    print a
+    return True
+
+def SteamRegisterLobbyDataChangedCallback(a):
+    print "SteamRegisterLobbyDataChangedCallback"
+    print a
+    return True
+
+def SteamLeaveLobby():
+    return True
+
+def GetUserSteamID():
+    return 123
+
+def SteamSendSessionTicket(a):
+    print "SteamSendSessionTicket:"
+    print a
+    #calc = a.calculate_blocked_map_progress()
+    map_load = a.attempt_local_map_open("DragonIsland")
+    #log = a.packet_received(map_load, True)
+    #log = a.finished_connecting(map_load)
+    #print log
+    return False
+
+def SteamCancelSessionTicket():
+    return True
+
+def SteamSendPassword():
+    return True
+
+def game_version():
+    return 163
+
+def SteamUpdate(a):
+    #print "SteamUpdate:"
+    #print a
+    return True
+
+def SteamAddFavouriteServer():
+    return True
+
+def SteamShutdownClient():
+    return True
+
+def SteamGetFavouriteServerList(a, b):
+    print "SteamGetFavouriteServerList: "
+    print [a, b]
+    return True
+
+def SteamGetInternetServerList(a=False, b=False, c=False, d=False):
+    print "SteamGetInternetServerList: "
+    print [a, b, c, d]
+    return True
+
+def SteamHasGameOverlayActivationChanged():
+    return True
+
+def SteamSetRichPresenceServer():
+    return True
+
+def SteamRegisterServerRequestedCallback(a):
+    print "SteamRegisterServerRequestedCallback:"
+    print a
+    return True
+
+def SteamClearRichPresence():
+    return True
+
+def SteamIsLoggedOn():
+    return True
+
+def SteamIsDLCInstalled():
+    return True
+
+def SteamSetDLCInstalledCallback(a):
+    print "SteamSetDLCInstalledCallback"
+    print a
+    return True
+
+def SteamGetAllLobbyData():
+    print "SteamGetAllLobbyData"
+    return True
+
+def SteamGetLobbyPing():
+    print "SteamGetLobbyPing"
+    return True
+
+def SteamGetLobbyMembers():
+    print "SteamGetLobbyMembers"
+    return True
+
+def SteamGetLobbyMemberName():
+    print "SteamGetLobbyMemberName"
+    return True
+
+def SteamSendChatMessage():
+    print "SteamSendChatMessage"
+    return True
+
+def SteamEnumerateFriendLobbies():
+    print "SteamEnumerateFriendLobbies"
+    return True
+
+def SteamEnumeratePublicLobbies():
+    print "SteamEnumeratePublicLobbies"
+    return True
+
+def SteamCreateLobby():
+    print "SteamCreateLobby"
+    return True
+
+def SteamJoinLobby():
+    print "SteamJoinLobby"
+    return True
+
+def SteamRefreshLobbyData():
+    print "SteamRefreshLobbyData"
+    return True
+
+def SteamClearAllPingRequests():
+    print "SteamClearAllPingRequests"
+    return True
+
+def SteamGetFriendList():
+    print "SteamGetFriendList"
+    return []
+
+def SteamGetFriendLobbyOwner():
+    print "SteamGetFriendLobbyOwner"
+    return True
+
+def SteamShowInviteFriendOverlay():
+    print "SteamShowInviteFriendOverlay"
+    return True
+
+def SteamSetLobbyMemberData():
+    print "SteamSetLobbyMemberData"
+    return True
+
+def SteamGetLobbyMemberData():
+    print "SteamGetLobbyMemberData"
+    return True
+
+def SteamSetLobbyGameServer():
+    print "SteamSetLobbyGameServer"
+    return True
+
+def SteamGetLobbyGameServer():
+    print "SteamGetLobbyGameServer"
+    return True
+
+def SteamClearLobbyGameServer():
+    print "SteamClearLobbyGameServer"
+    return True
+
+def SteamServerSetAchievement():
+    print "SteamServerSetAchievement"
+    return True
+
+def SteamRegisterServerRequestedCallback(a):
+    print "SteamRegisterServerRequestedCallback"
+    print a
+    return True
+
+def SteamShowAchievements(*a):
+    print "SteamShowAchievements:"
+    print a
+    return []
+
+def SteamRemoveFavouriteServer():
+    print "SteamRemoveFavouriteServer"
+    return True
+
+def SteamInitializeClient():
+    print "SteamInitializeClient"
+    return True
+
+def SteamRequestLobbyJoin():
+    print "SteamRequestLobbyJoin"
+    return True
+
+def SteamGetCurrentGameLanguage():
+    return "russian"
+
+def SteamIsDLCInstalled(a):
+    return True
+
+def SteamGetInternetOfficialServerList(a=False, b=False, c=False):
+    return True
+
+def SteamGetInternetUserServerList(a=False, b=False, c=False):
+    print "SteamGetInternetUserServerList"
+    print (a,b,c)
+    return True
+
+def SteamGetLANServerList():
+    return True
+
+def SteamGetHistoryServerList():
+    return True
+
+def SteamGetFriendsServerList():
+    return True
+
+def SteamClearServerRequest():
+    return True

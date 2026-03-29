@@ -1,0 +1,86 @@
+{
+	"render_list": [
+		"MM_CHICAGO_skysphere",
+		"MM_CHICAGO_Stars",
+		"MM_CHICAGO_Moon",
+		"MM_CHICAGO_SkyCloudsA",
+		"MM_CHICAGO_SkyCloudsB",
+		"MM_CHICAGO_BuildingsFar",
+		"MM_CHICAGO_Smog",
+		"MM_CHICAGO_SkySmoke_01",
+		"MM_CHICAGO_SkySmoke_02",
+		"MM_CHICAGO_SkySmoke_03",
+		"MM_CHICAGO_SkySmoke_04",
+		"MM_CHICAGO_SkySmoke_05",
+		"MM_CHICAGO_SkySmoke_06",
+		"MM_CHICAGO_BuildingsNear"
+    ],
+	
+	"uv_speeds": {
+		"MM_CHICAGO_skysphere" 		: [0.0, 0.0],
+		"MM_CHICAGO_Stars" 			: [-0.00064, 0.00064],
+		"MM_CHICAGO_Moon" 			: [0.0, 0.0],
+		"MM_CHICAGO_SkyCloudsA" 	: [-0.00016, 0.00016],
+		"MM_CHICAGO_SkyCloudsB" 	: [-0.00012, 0.00012],
+		"MM_CHICAGO_BuildingsFar" 	: [0.0, 0.0],
+		"MM_CHICAGO_Smog" 			: [0.0004, 0.0],
+		"MM_CHICAGO_BuildingsNear" 	: [0.0, 0.0],
+		"MM_CHICAGO_SkySmoke_01" 	: [0.0006, 0.0],
+		"MM_CHICAGO_SkySmoke_02" 	: [0.0006, 0.0],
+		"MM_CHICAGO_SkySmoke_03" 	: [0.0006, 0.0],
+		"MM_CHICAGO_SkySmoke_04" 	: [0.0006, 0.0],
+		"MM_CHICAGO_SkySmoke_05" 	: [0.0006, 0.0],
+		"MM_CHICAGO_SkySmoke_06" 	: [0.0006, 0.0]
+	},
+	
+	"scale" : {
+		"MM_CHICAGO_skysphere" 		: -80.0,
+		"MM_CHICAGO_Stars" 			: -80.0,
+		"MM_CHICAGO_Moon" 			: -80.0,
+		"MM_CHICAGO_SkyCloudsA" 	: -80.0,
+		"MM_CHICAGO_SkyCloudsB" 	: -80.0,
+		"MM_CHICAGO_BuildingsFar" 	: -80.0,
+		"MM_CHICAGO_Smog" 			: -80.0,
+		"MM_CHICAGO_BuildingsNear" 	: -80.0,
+		"MM_CHICAGO_SkySmoke_01" 	: -80.0,
+		"MM_CHICAGO_SkySmoke_02" 	: -80.0,
+		"MM_CHICAGO_SkySmoke_03" 	: -80.0,
+		"MM_CHICAGO_SkySmoke_04" 	: -80.0,
+		"MM_CHICAGO_SkySmoke_05" 	: -80.0,
+		"MM_CHICAGO_SkySmoke_06" 	: -80.0
+	},
+	
+	"rotation" : {
+		"MM_CHICAGO_skysphere" 		: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_Stars"			: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_Moon"			: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_SkyCloudsA"		: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_SkyCloudsB"		: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_BuildingsFar"	: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_Smog"			: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_BuildingsNear"	: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_SkySmoke_01"	: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_SkySmoke_02"	: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_SkySmoke_03"	: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_SkySmoke_04"	: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_SkySmoke_05"	: [180.0, 180.0, 0.0],
+		"MM_CHICAGO_SkySmoke_06"	: [180.0, 180.0, 0.0]
+	}, 
+	
+	"translation": {
+		"MM_CHICAGO_skysphere" 		: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_Stars"			: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_Moon"			: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_SkyCloudsA"		: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_SkyCloudsB"		: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_BuildingsFar"	: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_Smog"			: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_BuildingsNear"	: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_SkySmoke_01"	: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_SkySmoke_02"	: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_SkySmoke_03"	: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_SkySmoke_04"	: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_SkySmoke_05"	: [0.0, 0.0, 0.0],
+		"MM_CHICAGO_SkySmoke_06"	: [0.0, 0.0, 0.0]
+	}
+}

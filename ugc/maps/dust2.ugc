@@ -1,0 +1,522 @@
+{
+    "use_overhead_image": false, 
+    "description": "de_dust2", 
+    "title": "de_dust2", 
+    "ugc_entities": [
+        {
+            "position": [
+                286, 
+                206, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                299, 
+                215, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                330, 
+                285, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                262, 
+                309, 
+                238
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                247, 
+                274, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                208, 
+                331, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                200, 
+                283, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                202, 
+                222, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                221, 
+                200, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                275, 
+                225, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_ammo_drop"
+        }, 
+        {
+            "position": [
+                275, 
+                233, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                252, 
+                274, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                231, 
+                289, 
+                231
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                202, 
+                259, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                236, 
+                231, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                286, 
+                176, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                327, 
+                334, 
+                233
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                269, 
+                279, 
+                238
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                293, 
+                317, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                311, 
+                277, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                330, 
+                179, 
+                230
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                235, 
+                181, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                231, 
+                282, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                236, 
+                319, 
+                231
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                200, 
+                274, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                221, 
+                259, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                298, 
+                195, 
+                230
+            ], 
+            "mode": "zom", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                4, 
+                195, 
+                234
+            ], 
+            "mode": "zom", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                276, 
+                183, 
+                230
+            ], 
+            "mode": "tdm", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                236, 
+                307, 
+                238
+            ], 
+            "mode": "tdm", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                205, 
+                308, 
+                231
+            ], 
+            "mode": "ctf", 
+            "item": "ugc_baseblue_small"
+        }, 
+        {
+            "position": [
+                205, 
+                328, 
+                230
+            ], 
+            "mode": "ctf", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                307, 
+                316, 
+                234
+            ], 
+            "mode": "ctf", 
+            "item": "ugc_basegreen_small"
+        }, 
+        {
+            "position": [
+                324, 
+                317, 
+                233
+            ], 
+            "mode": "ctf", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                263, 
+                224, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                307, 
+                315, 
+                234
+            ], 
+            "mode": "mh", 
+            "item": "ugc_base_small"
+        }, 
+        {
+            "position": [
+                205, 
+                307, 
+                231
+            ], 
+            "mode": "mh", 
+            "item": "ugc_base_small"
+        }, 
+        {
+            "position": [
+                236, 
+                306, 
+                238
+            ], 
+            "mode": "mh", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                275, 
+                183, 
+                230
+            ], 
+            "mode": "mh", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                205, 
+                309, 
+                231
+            ], 
+            "mode": "tc", 
+            "item": "ugc_base_small"
+        }, 
+        {
+            "position": [
+                195, 
+                328, 
+                230
+            ], 
+            "mode": "tc", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                307, 
+                317, 
+                234
+            ], 
+            "mode": "tc", 
+            "item": "ugc_base_small"
+        }, 
+        {
+            "position": [
+                327, 
+                299, 
+                234
+            ], 
+            "mode": "tc", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                204, 
+                308, 
+                231
+            ], 
+            "mode": "dia", 
+            "item": "ugc_base_small"
+        }, 
+        {
+            "position": [
+                306, 
+                316, 
+                234
+            ], 
+            "mode": "dia", 
+            "item": "ugc_base_small"
+        }, 
+        {
+            "position": [
+                328, 
+                183, 
+                230
+            ], 
+            "mode": "dia", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                234, 
+                301, 
+                231
+            ], 
+            "mode": "dia", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                313, 
+                305, 
+                234
+            ], 
+            "mode": "dem", 
+            "item": "ugc_basegreen_med"
+        }, 
+        {
+            "position": [
+                208, 
+                316, 
+                231
+            ], 
+            "mode": "dem", 
+            "item": "ugc_baseblue_med"
+        }, 
+        {
+            "position": [
+                205, 
+                326, 
+                230
+            ], 
+            "mode": "dem", 
+            "item": "ugc_spawnblue_small"
+        }, 
+        {
+            "position": [
+                321, 
+                323, 
+                233
+            ], 
+            "mode": "dem", 
+            "item": "ugc_spawngreen_small"
+        }, 
+        {
+            "position": [
+                186, 
+                295, 
+                234
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }, 
+        {
+            "position": [
+                320, 
+                241, 
+                233
+            ], 
+            "mode": "nor", 
+            "item": "ugc_block_drop"
+        }, 
+        {
+            "position": [
+                303, 
+                241, 
+                233
+            ], 
+            "mode": "nor", 
+            "item": "ugc_health_drop"
+        }
+    ], 
+    "ground_colors": [
+        [
+            247, 
+            170, 
+            84, 
+            238
+        ], 
+        [
+            247, 
+            157, 
+            69, 
+            239
+        ]
+    ], 
+    "skybox_name": "User_Desert.txt", 
+    "aos_ugc_handle": 163001986, 
+    "author": "Uzdo", 
+    "baseplate": "DesertBaseplate", 
+    "modified_since_publish": true, 
+    "tags": [
+        "map", 
+        "dem", 
+        "zom", 
+        "mh", 
+        "dia", 
+        "tdm", 
+        "ctf", 
+        "tc"
+    ]
+}

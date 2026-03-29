@@ -1,0 +1,1 @@
+fsquad_tex_vert = '\n#version 110\n\nvarying vec2 texCoord;\n\nvoid main()\n{\n    gl_Position.xy = gl_Vertex.xy * 2.0 - 1.0;\n    gl_Position.zw = vec2(-1.0, 1.0);\n\n    gl_FrontColor = gl_Color;\n\n    texCoord = gl_Vertex.xy;\n}\n'

@@ -1,0 +1,12 @@
+{
+'name' : 'CTF_TITLE',
+'modes' : ['ctf'],
+'ugc_modes': [],
+'maps' : ['Atlantis','BlockNess', 'CastleWars', 'DoubleDragon', 'Invasion', 'TokyoNeon'],
+'classic' : False,
+'mafia' : False,
+'tutorial' : False,
+'demo' : False,
+'players' : [16,20,24],
+'config' : {}
+}

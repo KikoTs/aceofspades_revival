@@ -1,0 +1,156 @@
+{
+    "render_list": [
+        "UserDesert_SkySphere",
+        "UserDesert_SkyCloudsA",
+        "UserDesert_SkyCloudsB",
+        "UserDesert_SkySunBeamsB",
+        "UserDesert_SkySunBeamsA",
+        "UserDesert_SkySun",
+        "UserDesert_SandDunes",
+        "UserDesert_SandstormB",
+        "UserDesert_SandstormA"
+    ],
+    "rotation": {
+        "UserDesert_SandDunes": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserDesert_SandstormA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserDesert_SandstormB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserDesert_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserDesert_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserDesert_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserDesert_SkySun": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserDesert_SkySunBeamsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "UserDesert_SkySunBeamsB": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "UserDesert_SandDunes": -60.0,
+        "UserDesert_SandstormA": -60.0,
+        "UserDesert_SandstormB": -60.0,
+        "UserDesert_SkyCloudsA": -60.0,
+        "UserDesert_SkyCloudsB": -60.0,
+        "UserDesert_SkySphere": -60.0,
+        "UserDesert_SkySun": -60.0,
+        "UserDesert_SkySunBeamsA": -60.0,
+        "UserDesert_SkySunBeamsB": -60.0
+    },
+    "translation": {
+        "UserDesert_SandDunes": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "UserDesert_SandstormA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "UserDesert_SandstormB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "UserDesert_SkyCloudsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "UserDesert_SkyCloudsB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "UserDesert_SkySphere": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "UserDesert_SkySun": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "UserDesert_SkySunBeamsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "UserDesert_SkySunBeamsB": [
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "UserDesert_SandDunes": [
+            0.0,
+            0.0
+        ],
+        "UserDesert_SandstormA": [
+            0.001125,
+            0.0
+        ],
+        "UserDesert_SandstormB": [
+            0.001115,
+            0.0
+        ],
+        "UserDesert_SkyCloudsA": [
+            0.0016,
+            0.0016
+        ],
+        "UserDesert_SkyCloudsB": [
+            0.0012,
+            0.0012
+        ],
+        "UserDesert_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "UserDesert_SkySun": [
+            0.0,
+            0.0
+        ],
+        "UserDesert_SkySunBeamsA": [
+            0.003,
+            0.0
+        ],
+        "UserDesert_SkySunBeamsB": [
+            0.003,
+            0.0
+        ]
+    }
+}

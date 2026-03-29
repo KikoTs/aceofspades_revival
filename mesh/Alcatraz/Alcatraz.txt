@@ -1,0 +1,109 @@
+{
+    "render_list": [
+        "ALCATRAZ_Skysphere",
+        "ALCATRAZ_SUN",
+        "ALCATRAZ_SKYCloudsB",
+        "ALCATRAZ_SKYCloudsA",
+        "ALCATRAZ_Buildings",
+        "ALCATRAZ_SKY_FogBank"
+        
+    ],
+    "rotation": {
+        "ALCATRAZ_Buildings": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ALCATRAZ_SKYCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ALCATRAZ_SKYCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ALCATRAZ_SKY_FogBank": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ALCATRAZ_SUN": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ALCATRAZ_Skysphere": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "ALCATRAZ_Buildings": -60.0,
+        "ALCATRAZ_SKYCloudsA": -60.0,
+        "ALCATRAZ_SKYCloudsB": -60.0,
+        "ALCATRAZ_SKY_FogBank": -60.0,
+        "ALCATRAZ_SUN": -60.0,
+        "ALCATRAZ_Skysphere": -60.0
+    },
+    "translation": {
+        "ALCATRAZ_Buildings": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ALCATRAZ_SKYCloudsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ALCATRAZ_SKYCloudsB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ALCATRAZ_SKY_FogBank": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ALCATRAZ_SUN": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ALCATRAZ_Skysphere": [
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "ALCATRAZ_Buildings": [
+            0.0,
+            0.0
+        ],
+        "ALCATRAZ_SKYCloudsA": [
+            -0.00016,
+            0.00016
+        ],
+        "ALCATRAZ_SKYCloudsB": [
+            -0.00012,
+            0.00012
+        ],
+        "ALCATRAZ_SKY_FogBank": [
+            0.0004,
+            0.0
+        ],
+        "ALCATRAZ_SUN": [
+            0.0,
+            0.0
+        ],
+        "ALCATRAZ_Skysphere": [
+            0.0,
+            0.0
+        ]
+    }
+}

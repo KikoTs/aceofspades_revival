@@ -1,0 +1,1 @@
+passthrough_vert = '\n#version 110\n\nfloat FogEyeRadial(vec4 Rh)\n{\n    vec4 Re = Rh / Rh.w;\n    return length(Re);\n}\n\nvoid main() \n{\n    gl_FrontColor = gl_Color;\n    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n\n    gl_FogFragCoord = FogEyeRadial(gl_ModelViewMatrix * gl_Vertex);\n}\n'

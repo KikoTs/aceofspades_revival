@@ -1,0 +1,12 @@
+{
+'name': 'TDM_TITLE',
+'modes': ['tdm'],
+'ugc_modes': [],
+'maps': ['AncientEgypt', 'ArcticBase', 'Atlantis', 'BlockNess', 'CastleWars', 'DoubleDragon', 'DragonIsland', 'Frontier', 'GreatWall', 'Invasion', 'London', 'LunarBase', 'MayanJungle', 'SpookyMansion', 'TheColosseum', 'TokyoNeon'],
+'classic': False,
+'mafia': False,
+'tutorial': False,
+'demo' : False,
+'players': [16,20,24,24],
+'config': {}
+}

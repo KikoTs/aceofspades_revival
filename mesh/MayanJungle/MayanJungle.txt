@@ -1,0 +1,140 @@
+{
+    "render_list": [
+        "MayanJungle_SkySphere",
+        "MayanJungle_Panorama",
+        "MayanJungle_FogBankA",
+        "MayanJungle_FogBankB",
+        "MayanJungle_SkyCloudsA",
+        "MayanJungle_SkyCloudsB",
+        "MayanJungle_SunBeams",
+        "MayanJungle_SUN"
+    ],
+    "rotation": {
+        "MayanJungle_FogBankA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "MayanJungle_FogBankB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "MayanJungle_Panorama": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "MayanJungle_SUN": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "MayanJungle_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "MayanJungle_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "MayanJungle_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "MayanJungle_SunBeams": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "MayanJungle_FogBankA": -60.0,
+        "MayanJungle_FogBankB": -60.0,
+        "MayanJungle_Panorama": -60.0,
+        "MayanJungle_SUN": -60.0,
+        "MayanJungle_SkyCloudsA": -60.0,
+        "MayanJungle_SkyCloudsB": -60.0,
+        "MayanJungle_SkySphere": -60.0,
+        "MayanJungle_SunBeams": -60.0
+    },
+    "translation": {
+        "MayanJungle_FogBankA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "MayanJungle_FogBankB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "MayanJungle_Panorama": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "MayanJungle_SUN": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "MayanJungle_SkyCloudsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "MayanJungle_SkyCloudsB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "MayanJungle_SkySphere": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "MayanJungle_SunBeams": [
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "MayanJungle_FogBankA": [
+            0.0005,
+            0.0
+        ],
+        "MayanJungle_FogBankB": [
+            0.0005,
+            0.0
+        ],
+        "MayanJungle_Panorama": [
+            0.0,
+            0.0
+        ],
+        "MayanJungle_SUN": [
+            0.0,
+            0.0
+        ],
+        "MayanJungle_SkyCloudsA": [
+            -0.00015,
+            0.00025
+        ],
+        "MayanJungle_SkyCloudsB": [
+            -0.00025,
+            0.00015
+        ],
+        "MayanJungle_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "MayanJungle_SunBeams": [
+            0.00025,
+            0.0
+        ]
+    }
+}

@@ -1,0 +1,12 @@
+{
+'name': 'MULTIHILL_TITLE',
+'modes': ['mh'],
+'ugc_modes': [],
+'maps': ['AncientEgypt', 'Atlantis', 'BlockNess', 'BranCastle', 'CastleWars', 'DoubleDragon', 'DragonIsland', 'Frontier', 'GreatWall', 'Invasion', 'London', 'LunarBase', 'MayanJungle', 'SpookyMansion', 'TheColosseum'],
+'classic': False,
+'mafia': False,
+'tutorial': False,
+'demo' : False,
+'players': [16,20,24],
+'config': {}
+}

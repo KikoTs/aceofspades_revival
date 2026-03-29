@@ -1,0 +1,71 @@
+{
+	"render_list": [
+		"WW2_SkySphere", 
+		"WW2_SkyCloudsB",
+		"WW2_SkyCloudsA",
+		"WW2_SkyBG_Hills_A",
+		"WW2_SkyBG_Hills_B",
+		"WW2_SkyBG_Hills_B1",
+		"WW2_SkySmoke_05",
+		"WW2_SkySmoke_06",
+		"WW2_SkySmoke_04",
+		"WW2_SkySmoke_03",
+		"WW2_SkySmoke_02"         	
+    ],
+	
+	"uv_speeds": {
+		"WW2_SkySphere" : [0.0, 0.0],
+		"WW2_SkyCloudsA" : [-0.0005, 0.0002],
+		"WW2_SkyCloudsB" : [-0.0002, 0.0005],
+        "WW2_SkyBG_Hills_A" : [0.0, 0.0],
+		"WW2_SkyBG_Hills_B" : [0.0, 0.0],
+		"WW2_SkyBG_Hills_B1" : [0.0, 0.0],
+		"WW2_SkySmoke_02" : [0.0006, 0.0],
+		"WW2_SkySmoke_03" : [0.0007, 0.0],
+		"WW2_SkySmoke_04" : [0.0005, 0.0],
+		"WW2_SkySmoke_05" : [0.0008, 0.0],
+		"WW2_SkySmoke_06" : [0.0009, 0.0]
+	},
+	
+	"scale" : {
+		"WW2_SkySphere" : 60.0,
+		"WW2_SkyCloudsA" : 60,
+		"WW2_SkyCloudsB" : 60,
+        "WW2_SkyBG_Hills_A" : 60.0,
+		"WW2_SkyBG_Hills_B" : 60.0,
+		"WW2_SkyBG_Hills_B1" : 60.0,
+		"WW2_SkySmoke_02" : 60.0,
+		"WW2_SkySmoke_03" : 60.0,
+		"WW2_SkySmoke_04" : 60.0,
+		"WW2_SkySmoke_05" : 60.0,
+		"WW2_SkySmoke_06" : 60.0
+	},
+	
+	"rotation" : {
+		"WW2_SkySphere" : [0.0, 0.0, 0.0],
+		"WW2_SkyCloudsA" : [0.0, 0.0, 0.0],
+		"WW2_SkyCloudsB" : [0.0, 0.0, 0.0],
+        "WW2_SkyBG_Hills_A" : [0.0, 0.0, 0.0],
+		"WW2_SkyBG_Hills_B" : [0.0, 0.0, 0.0],
+		"WW2_SkyBG_Hills_B1" : [0.0, 0.0, 0.0],
+		"WW2_SkySmoke_02" : [0.0, 0.0, 0.0],
+		"WW2_SkySmoke_03" : [0.0, 0.0, 0.0],
+		"WW2_SkySmoke_04" : [0.0, 0.0, 0.0],
+		"WW2_SkySmoke_05" : [0.0, 0.0, 0.0],
+		"WW2_SkySmoke_06" : [0.0, 0.0, 0.0]
+	}, 
+	
+	"translation": {
+		"WW2_SkySphere" : [0.0, 15, 0.0],
+		"WW2_SkyCloudsA" : [0.0, 15, 0.0],
+		"WW2_SkyCloudsB" : [0.0, 15, 0.0],
+        "WW2_SkyBG_Hills_A" : [0.0, 15, 0.0],
+		"WW2_SkyBG_Hills_B" : [0.0, 15, 0.0],
+		"WW2_SkyBG_Hills_B1" : [0.0, 15, 0.0],
+		"WW2_SkySmoke_02" : [0.0, 15, 0.0],
+		"WW2_SkySmoke_03" : [0.0, 15, 0.0],
+		"WW2_SkySmoke_04" : [0.0, 15, 0.0],
+		"WW2_SkySmoke_05" : [0.0, 15, 0.0],
+		"WW2_SkySmoke_06" : [0.0, 15, 0.0]
+	}
+}

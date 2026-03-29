@@ -1,0 +1,140 @@
+{
+    "render_list": [
+        "ATLANTIS_SkySphere",
+        "ATLANTIS_SkyCloudsA",
+        "ATLANTIS_SkyCloudsB",
+        "ATLANTIS_seamist",
+        "ATLANTIS_SUN",
+        "ATLANTIS_SunBeams",
+        "ATLANTIS_WavesA",
+        "ATLANTIS_WavesB"
+    ],
+    "rotation": {
+        "ATLANTIS_SUN": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ATLANTIS_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ATLANTIS_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ATLANTIS_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ATLANTIS_SunBeams": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ATLANTIS_WavesA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ATLANTIS_WavesB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "ATLANTIS_seamist": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "ATLANTIS_SUN": -60.0,
+        "ATLANTIS_SkyCloudsA": -60.0,
+        "ATLANTIS_SkyCloudsB": -60.0,
+        "ATLANTIS_SkySphere": -60.0,
+        "ATLANTIS_SunBeams": -60.0,
+        "ATLANTIS_WavesA": -60.0,
+        "ATLANTIS_WavesB": -60.0,
+        "ATLANTIS_seamist": -60.0
+    },
+    "translation": {
+        "ATLANTIS_SUN": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ATLANTIS_SkyCloudsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ATLANTIS_SkyCloudsB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ATLANTIS_SkySphere": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ATLANTIS_SunBeams": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ATLANTIS_WavesA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ATLANTIS_WavesB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ATLANTIS_seamist": [
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "ATLANTIS_SUN": [
+            0.0,
+            0.0
+        ],
+        "ATLANTIS_SkyCloudsA": [
+            0.00016,
+            -0.00035
+        ],
+        "ATLANTIS_SkyCloudsB": [
+            0.00016,
+            -0.00035
+        ],
+        "ATLANTIS_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "ATLANTIS_SunBeams": [
+            0.00025,
+            0.0
+        ],
+        "ATLANTIS_WavesA": [
+            -0.0005,
+            0.00075
+        ],
+        "ATLANTIS_WavesB": [
+            -0.0005,
+            -0.00075
+        ],
+        "ATLANTIS_seamist": [
+            0.00035,
+            0.0
+        ]
+    }
+}

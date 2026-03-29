@@ -1,0 +1,73 @@
+name = 'debugBuilding'
+version = '1.0'
+author = ''
+description = 'Debug Building'
+
+ac_debug = False
+ac_ids = ['debugbuilding', 'debugbuilding']
+ac_centres = [(265, 274, 225), (265, 247, 225)]
+ac_w_h_d = [(6, 6, 6), (6, 6, 6)]
+ac_types = [2, 2]
+ac_teams = [1, 2]
+
+screenshot_camera_positions = [(243, 244, 179)]
+screenshot_camera_rotations = [(-48, 243, 0)]
+
+# Spawn areas are defined as a centre and then a size:
+
+team_one_spawn_area = [((265,251,222), (2,2,2))]
+team_two_spawn_area = [((265,263,222), (2,2,2))]
+
+# Examples of game-mode specific spawn areas:
+
+zombie_spawn_area = [((265,251,222), (2,2,2))]
+survivor_spawn_area = [((265,251,222), (2,2,2))]
+
+ctf_team_one_spawn_area = [((265,251,222), (2,2,2))]
+ctf_team_two_spawn_area = [((265,251,222), (2,2,2))]
+
+mh_team_one_spawn_area = [((265,251,222), (2,2,2))]
+mh_team_two_spawn_area = [((265,251,222), (2,2,2))]
+
+tdm_team_one_spawn_area = [((265,251,222), (2,2,2))]
+tdm_team_two_spawn_area = [((265,251,222), (2,2,2))]
+
+dia_team_one_spawn_area = [((265,251,222), (2,2,2))]
+dia_team_two_spawn_area = [((265,251,222), (2,2,2))]
+
+dem_team_one_spawn_area = [((265,251,222), (2,2,2))]
+dem_team_two_spawn_area = [((265,251,222), (2,2,2))]
+
+vip_team_one_spawn_area = [((265,251,222), (2,2,2))]
+vip_team_two_spawn_area = [((265,251,222), (2,2,2))]
+
+oc_team_one_spawn_area = [((265,251,222), (2,2,2))]
+oc_team_two_spawn_area = [((265,251,222), (2,2,2))]
+
+ammo_crate_drop_points = [(250, 276, 225), (281, 245, 225)]
+health_crate_drop_points = [(281, 276, 225), (250, 245, 225)]
+
+team_one_base_point = 249, 271, 225
+team_one_base_w_h_d = 6, 6, 6
+team_one_min_destruction = 10
+team_two_base_point = 276, 246, 225
+team_two_base_w_h_d = 6, 6, 6
+team_two_min_destruction = 10
+cap_limit = 100
+time_limit = 480.0
+
+mh_base_points = [(252, 274, 225), (279, 274, 225), (279, 247, 225), (252, 247, 225)]
+mh_base_w_h_d = [(6, 6, 6), (6, 6, 6), (6, 6, 6), (6, 6, 6)]
+
+
+occupation_base_point = 252, 274, 225
+occupation_base_w_h_d = 6, 6, 6
+occupation_bomb_points = [(279, 247, 225)]
+
+ctf_base_points = [(252, 274, 225), (279, 274, 225)]
+ctf_base_w_h_d = [(6, 6, 6), (6, 6, 6)]
+
+diamond_base_points = [(252, 274, 225), (279, 274, 225), (279, 247, 225), (252, 247, 225)]
+diamond_base_w_h_d  = [(6, 6, 6),       (6, 6, 6),       (6, 6, 6),       (6, 6, 6)]
+diamond_base_teams  = [ 0,               0,               0,              0]
+diamond_base_capacity = [ 1,             1,               1,              1]

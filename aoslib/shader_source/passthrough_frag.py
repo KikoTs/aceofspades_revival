@@ -1,0 +1,1 @@
+passthrough_frag = '\n#version 110\n\n#define saturate(x) clamp(x, 0.0, 1.0)\n\nvoid main() \n{\n    vec4 color = gl_Color;\n\n    // do the final colouring with the fog\n    color.rgb = mix(gl_Fog.color.rgb, color.rgb, saturate((gl_Fog.end - gl_FogFragCoord) * gl_Fog.scale));\n\n    gl_FragColor = vec4(color.rgb, color.a);\n}\n'

@@ -1,0 +1,57 @@
+{
+	"render_list": [
+		"WW2_DL_SkySphere",
+		"WW2_DL_Mountains",
+		"WW2_DL_Hills",
+		"WW2_DL_Coast",
+		"WW2_DL_Lighthouses", 
+        "WW2_DL_SkyCloudsA",
+		"WW2_DL_SkyCloudsB",
+        "WW2_DL_Lights" 	
+    ],
+	
+	"uv_speeds": {
+		"WW2_DL_SkySphere" : [0.0, 0.0],
+		"WW2_DL_SkyCloudsA" : [-0.00015, 0.0001],
+		"WW2_DL_SkyCloudsB" : [-0.0001, 0.00015],
+		"WW2_DL_Mountains" : [0.0, 0.0],
+		"WW2_DL_Hills" : [0.0, 0.0],
+        "WW2_DL_Coast" : [0.0, 0.0],
+		"WW2_DL_Lighthouses" : [0.0, 0.0],
+        "WW2_DL_Lights" : [0.0015, 0.0]
+	},
+	
+	"scale" : {
+		"WW2_DL_SkySphere" : 60.0,
+        "WW2_DL_SkyCloudsA" : 60,
+		"WW2_DL_SkyCloudsB" : 60,
+		"WW2_DL_Mountains" : 60,
+		"WW2_DL_Hills" : 60,
+        "WW2_DL_Coast" : 60,
+		"WW2_DL_Lighthouses" : 60,
+        "WW2_DL_Lights" : 60
+
+	},
+	
+	"rotation" : {
+		"WW2_DL_SkySphere" : [0.0, 0.0, 0.0],
+		"WW2_DL_SkyCloudsA" : [0.0, 0.0, 0.0],
+		"WW2_DL_SkyCloudsB" : [0.0, 0.0, 0.0],
+		"WW2_DL_Mountains" : [0.0, 0.0, 0.0],
+		"WW2_DL_Hills" : [0.0, 0.0, 0.0],
+        "WW2_DL_Coast" : [0.0, 0.0, 0.0],
+		"WW2_DL_Lighthouses" : [0.0, 0.0, 0.0],
+        "WW2_DL_Lights" : [0.0, 0.0, 0.0]
+	}, 
+	
+	"translation": {
+		"WW2_DL_SkySphere" : [0.0, 10, 0.0],
+		"WW2_DL_SkyCloudsA" : [0.0, 10, 0.0],
+		"WW2_DL_SkyCloudsB" : [0.0, 10, 0.0],
+		"WW2_DL_Mountains" : [0.0, 10, 0.0],
+		"WW2_DL_Hills" : [0.0, -5, 0.0],
+        "WW2_DL_Coast" : [0.0, 13, 0.0],
+		"WW2_DL_Lighthouses" : [0.0, 10, 0.0],
+        "WW2_DL_Lights" : [0.0, 10, 0.0]
+	}
+}

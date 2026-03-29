@@ -1,0 +1,12 @@
+{
+'name': 'TUTORIAL_MODE_TITLE',
+'modes': ['tut'],
+'ugc_modes': [],
+'maps': ['Training'],
+'classic': False,
+'mafia': False,
+'tutorial': True,
+'demo' : True,
+'players': [12],
+'config': { 'RULE_ENABLE_COLOUR_PICKER' : 'OFF' }
+}

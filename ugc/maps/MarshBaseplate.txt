@@ -1,0 +1,21 @@
+name = 'Marsh'
+version = '1.0'
+author = 'Steve Thompson'
+description = 'Marsh'
+
+skybox_texture = 'Invasion.txt'
+fog_color = 30,30,30
+
+ambient_sounds = [
+    ['amb_invasion', [], 1.0, 0.0 ],
+    ]
+
+ground_colors = ((59, 58, 55, 238), (255, 58, 55, 239), (74,72,73, 239))
+
+light_color = (109,191,193)
+fog_color = (61,61,53)
+light_direction = (0.1,0.4,0.7)
+back_light_direction = (0.3,0.5,-0.1)
+back_light_color = (40,70,30)
+ambient_light_color = (25,8,33)
+ambient_light_intensity = 0.2

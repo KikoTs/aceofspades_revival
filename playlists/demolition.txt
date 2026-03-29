@@ -1,0 +1,12 @@
+{
+'name': 'DEMOLITION_TITLE',
+'modes': ['dem'],
+'ugc_modes': [],
+'maps': ['Atlantis', 'BlockNess', 'CastleWars', 'DoubleDragon', 'DragonIsland', 'Frontier', 'GreatWall', 'LunarBase', 'TokyoNeon'],
+'classic': False,
+'mafia': False,
+'tutorial': False,
+'demo' : False,
+'players': [16],
+'config': {}
+}

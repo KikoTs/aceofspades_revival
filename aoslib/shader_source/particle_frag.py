@@ -1,0 +1,1 @@
+particle_frag = '\n#version 110\n\nuniform sampler2D particle_tex;\n\nvarying vec2 tex_coord;\n\nvoid main()\n{\n    vec4 tex_col = texture2D(particle_tex, tex_coord);\n\n    gl_FragColor = tex_col * gl_Color;\n}\n'

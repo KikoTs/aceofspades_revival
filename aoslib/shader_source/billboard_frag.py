@@ -1,0 +1,1 @@
+billboard_frag = '\n#version 110\n\nvarying float diffuse_value;\n\n#define saturate(x) clamp(x, 0.0, 1.0)\n\nvoid main() {\n    vec4 color = gl_Color;\n    color.rgb = mix(gl_Fog.color.rgb, color.rgb, \n        saturate((gl_Fog.end - gl_FogFragCoord) * gl_Fog.scale));\n    gl_FragColor = color;\n}\n'

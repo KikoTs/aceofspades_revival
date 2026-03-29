@@ -1,0 +1,12 @@
+{
+'name': 'RANDOM',
+'modes': ['zom', 'tdm', 'dia', 'mh', 'oc', 'dem', 'ctf'],
+'ugc_modes': [],
+'maps': ['AncientEgypt', 'ArcticBase', 'Atlantis', 'BlockNess', 'BranCastle', 'CastleWars', 'DoubleDragon', 'DragonIsland', 'Frontier', 'GreatWall', 'Invasion', 'London', 'LunarBase', 'MayanJungle', 'SpookyMansion', 'TheColosseum', 'TokyoNeon'],
+'classic': False,
+'mafia': False,
+'tutorial': False,
+'demo' : False,
+'players': [16,20,24,24],
+'config': {}
+}

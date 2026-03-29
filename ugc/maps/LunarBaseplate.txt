@@ -1,0 +1,21 @@
+name = 'Lunar'
+version = '1.0'
+author = 'Jason Truman'
+description = 'Lunar'
+gravity = 0.4
+skybox_texture = 'User_Lunar.txt'
+fog_color = 128,128,128
+
+ambient_sounds = [
+    ['amb_moon', [], 1.0, 0.0 ],
+    ]
+
+ground_colors = ((72,72,72, 32), (64,64,64, 200))
+
+light_color = (255,255,255)
+fog_color = (62,59,57)
+light_direction = (0,0.5,0.5)
+back_light_direction = (0.5,-0.5,0.0)
+back_light_color = (10,10,10)
+ambient_light_color = (10,10,15)
+ambient_light_intensity = 0.2

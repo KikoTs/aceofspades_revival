@@ -1,0 +1,172 @@
+{
+    "render_list": [
+        "Egypt_SkySphere",
+        "Egypt_SkyCloudsB",
+        "Egypt_SkyCloudsA",
+        "Egypt_SkySunBeamsB",
+        "Egypt_SkySunBeamsA",
+        "Egypt_SkySun",
+        "Egypt_Pyramids",
+        "Egypt_SandDunes",
+        "Egypt_SandstormB",
+        "Egypt_SandstormA"
+    ],
+    "rotation": {
+        "Egypt_Pyramids": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "Egypt_SandDunes": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "Egypt_SandstormA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "Egypt_SandstormB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "Egypt_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "Egypt_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "Egypt_SkySphere": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "Egypt_SkySun": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "Egypt_SkySunBeamsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "Egypt_SkySunBeamsB": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "Egypt_Pyramids": -60.0,
+        "Egypt_SandDunes": -60.0,
+        "Egypt_SandstormA": -60.0,
+        "Egypt_SandstormB": -60.0,
+        "Egypt_SkyCloudsA": -60.0,
+        "Egypt_SkyCloudsB": -60.0,
+        "Egypt_SkySphere": -60.0,
+        "Egypt_SkySun": -60.0,
+        "Egypt_SkySunBeamsA": -60.0,
+        "Egypt_SkySunBeamsB": -60.0
+    },
+    "translation": {
+        "Egypt_Pyramids": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "Egypt_SandDunes": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "Egypt_SandstormA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "Egypt_SandstormB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "Egypt_SkyCloudsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "Egypt_SkyCloudsB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "Egypt_SkySphere": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "Egypt_SkySun": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "Egypt_SkySunBeamsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "Egypt_SkySunBeamsB": [
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "Egypt_Pyramids": [
+            0.0,
+            0.0
+        ],
+        "Egypt_SandDunes": [
+            0.0,
+            0.0
+        ],
+        "Egypt_SandstormA": [
+            0.001125,
+            0.0
+        ],
+        "Egypt_SandstormB": [
+            0.001115,
+            0.0
+        ],
+        "Egypt_SkyCloudsA": [
+            0.0016,
+            0.0016
+        ],
+        "Egypt_SkyCloudsB": [
+            0.0012,
+            0.0012
+        ],
+        "Egypt_SkySphere": [
+            0.0,
+            0.0
+        ],
+        "Egypt_SkySun": [
+            0.0,
+            0.0
+        ],
+        "Egypt_SkySunBeamsA": [
+            0.003,
+            0.0
+        ],
+        "Egypt_SkySunBeamsB": [
+            0.003,
+            0.0
+        ]
+    }
+}

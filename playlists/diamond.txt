@@ -1,0 +1,12 @@
+{
+'name': 'DIAMOND_MINE_TITLE',
+'modes': ['dia'],
+'ugc_modes': [],
+'maps': ['AncientEgypt', 'ArcticBase', 'Atlantis', 'BlockNess', 'BranCastle', 'CastleWars', 'DoubleDragon', 'DragonIsland', 'Frontier', 'GreatWall', 'London', 'LunarBase', 'MayanJungle', 'SpookyMansion', 'TheColosseum', 'TokyoNeon'],
+'classic': False,
+'mafia': False,
+'tutorial': False,
+'demo' : False,
+'players': [16,20,24,24],
+'config': {}
+}

@@ -1,0 +1,61 @@
+{
+    "render_list": [
+        "CLASSIC_Skysphere",
+        "CLASSIC_SKYCloudsB",
+        "CLASSIC_SKYCloudsA"
+
+    ],
+    "rotation": {
+        "CLASSIC_SKYCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "CLASSIC_SKYCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "CLASSIC_Skysphere": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "CLASSIC_SKYCloudsA": -60.0,
+        "CLASSIC_SKYCloudsB": -60.0,
+        "CLASSIC_Skysphere": -60.0
+    },
+    "translation": {
+        "CLASSIC_SKYCloudsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "CLASSIC_SKYCloudsB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "CLASSIC_Skysphere": [
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "CLASSIC_SKYCloudsA": [
+            0.00025,
+            0.0003
+        ],
+        "CLASSIC_SKYCloudsB": [
+            0.0002,
+            0.00025
+        ],
+        "CLASSIC_Skysphere": [
+            0.0,
+            0.0
+        ]
+    }
+}

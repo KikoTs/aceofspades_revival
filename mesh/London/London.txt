@@ -1,0 +1,124 @@
+{
+    "render_list": [
+        "LONDON_skysphere",
+        "LONDON_SkyCloudsA",
+        "LONDON_SkyCloudsB",
+        "LONDON_City",
+        "LONDON_SKY_FogBank",
+        "LONDON_RainA",
+        "LONDON_RainB"
+    ],
+    "rotation": {
+        "LONDON_City": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "LONDON_RainA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "LONDON_RainB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "LONDON_SKY_FogBank": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "LONDON_SkyCloudsA": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "LONDON_SkyCloudsB": [
+            180.0,
+            180.0,
+            0.0
+        ],
+        "LONDON_skysphere": [
+            180.0,
+            180.0,
+            0.0
+        ]
+    },
+    "scale": {
+        "LONDON_City": -60.0,
+        "LONDON_RainA": -60.0,
+        "LONDON_RainB": -60.0,
+        "LONDON_SKY_FogBank": -60.0,
+        "LONDON_SkyCloudsA": -60.0,
+        "LONDON_SkyCloudsB": -60.0,
+        "LONDON_skysphere": -60.0
+    },
+    "translation": {
+        "LONDON_City": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "LONDON_RainA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "LONDON_RainB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "LONDON_SKY_FogBank": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "LONDON_SkyCloudsA": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "LONDON_SkyCloudsB": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "LONDON_skysphere": [
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "uv_speeds": {
+        "LONDON_City": [
+            0.0,
+            0.0
+        ],
+        "LONDON_RainA": [
+            0.0001,
+            0.0003
+        ],
+        "LONDON_RainB": [
+            -0.0001,
+            0.0003
+        ],
+        "LONDON_SKY_FogBank": [
+            0.0,
+            0.0
+        ],
+        "LONDON_SkyCloudsA": [
+            0.00025,
+            0.00015
+        ],
+        "LONDON_SkyCloudsB": [
+            0.00015,
+            0.00025
+        ],
+        "LONDON_skysphere": [
+            0.00015,
+            0.0
+        ]
+    }
+}

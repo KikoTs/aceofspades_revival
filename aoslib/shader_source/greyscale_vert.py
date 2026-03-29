@@ -1,0 +1,1 @@
+greyscale_vert = '\n#version 110\n\nvarying vec2 texture_coordinate;\nvoid main()\n{\n        gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n        gl_FrontColor = gl_Color;\n        texture_coordinate = vec2(gl_MultiTexCoord0);\n}\n'
