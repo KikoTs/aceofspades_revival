@@ -138,8 +138,13 @@ REVIVAL_HIDDEN_IMPORTS = [
 ]
 
 # The bundled BattleSpades dedicated server that local_host.py launches for
-# Play / Tutorial / UGC. Override with AOS_BATTLESPADES_SERVER.
-BATTLESPADES_BUNDLE = ROOT.parent / "BattleSpades" / "dist" / "BattleSpades"
+# Play / Tutorial / UGC. The PyInstaller dist ships only code, so the server's
+# game data (maps/prefabs/plugins) is staged from the BattleSpades repo next to
+# it. Override the code dir with AOS_BATTLESPADES_SERVER and the data root with
+# AOS_BATTLESPADES_DATA.
+BATTLESPADES_REPO = ROOT.parent / "BattleSpades"
+BATTLESPADES_BUNDLE = BATTLESPADES_REPO / "dist" / "BattleSpades"
+BATTLESPADES_SERVER_DATA = ["maps", "prefabs", "plugins", "client_patches"]
 
 PKG_RESOURCES_SHIM = '''from __future__ import absolute_import
 
@@ -759,6 +764,29 @@ def copy_server_bundle(stage_dir: Path) -> None:
     if destination.exists():
         shutil.rmtree(destination)
     shutil.copytree(source, destination)
+
+    # The bare PyInstaller dist is code only. local_host runs the server with
+    # cwd=<server>, and the tutorial/match server loads maps/Training.vxl (plus
+    # prefabs/plugins) relative to that directory, so stage the server game data
+    # from the BattleSpades repo next to the exe. Without this the server exits 1
+    # with "missing tutorial map" and the client can never connect.
+    data_root = Path(os.environ.get('AOS_BATTLESPADES_DATA') or BATTLESPADES_REPO)
+    for name in BATTLESPADES_SERVER_DATA:
+        src = data_root / name
+        if not src.is_dir():
+            continue
+        dst = destination / name
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(src, dst)
+
+    training = destination / 'maps' / 'Training.vxl'
+    if not training.exists():
+        raise RuntimeError(
+            f'Server game data missing after staging (expected {training}). '
+            'Set AOS_BATTLESPADES_DATA to the BattleSpades data root containing '
+            'maps/, prefabs/, plugins/.'
+        )
 
 
 def ensure_debug_pkg(stage_dir: Path) -> None:
