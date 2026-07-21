@@ -399,7 +399,15 @@ def application_root():
 
 
 def resolve_server_bundle(root=None):
-    """Find the bundled server directory without consulting the CWD."""
+    """Find a COMPLETE bundled server directory (server exe + tutorial map).
+
+    A frozen release ships ``<app>/server`` with its maps. A source checkout has
+    no assembled server, so fall back to the most recent built release under
+    ``build/releases`` (the build stages maps/prefabs/plugins there). A code-only
+    dist without maps is rejected explicitly rather than spawned to crash.
+    """
+
+    import glob
 
     root = os.path.abspath(root or application_root())
     candidates = []
@@ -409,14 +417,35 @@ def resolve_server_bundle(root=None):
     candidates.extend([
         os.path.join(root, "server"),
         os.path.join(os.path.dirname(root), "server"),
-        os.path.abspath(os.path.join(root, "..", "..", "BattleSpades", "dist", "BattleSpades")),
     ])
+    # Source runs from the repo: prefer the newest built release's server, which
+    # the release build assembles with its game data.
+    candidates.extend(sorted(
+        glob.glob(os.path.join(root, "build", "releases", "*", "server")),
+        reverse=True,
+    ))
+    # Last resort: an unassembled dist beside the repo (code only, no maps).
+    candidates.append(os.path.join(os.path.dirname(root), "BattleSpades", "dist", "BattleSpades"))
+
+    incomplete = None
     for candidate in candidates:
-        executable = os.path.join(os.path.abspath(candidate), "BattleSpades.exe")
-        if os.path.isfile(executable):
-            return os.path.dirname(executable)
+        candidate = os.path.abspath(candidate)
+        if not os.path.isfile(os.path.join(candidate, "BattleSpades.exe")):
+            continue
+        if os.path.isfile(os.path.join(candidate, "maps", TUTORIAL_MAP_FILENAME)):
+            return candidate
+        if incomplete is None:
+            incomplete = candidate
+
+    if incomplete is not None:
+        raise LocalHostError(
+            "The BattleSpades server at %s has no maps (missing maps/%s). Build a "
+            "release with build.ps1, or set AOS_BATTLESPADES_SERVER to a complete "
+            "server folder." % (incomplete, TUTORIAL_MAP_FILENAME)
+        )
     raise LocalHostError(
-        "The bundled BattleSpades server is missing. Reinstall the complete client package."
+        "The bundled BattleSpades server is missing. Run from a built release, "
+        "or set AOS_BATTLESPADES_SERVER to a folder containing BattleSpades.exe."
     )
 
 
