@@ -25,7 +25,7 @@ TOOLCHAIN_VENDOR = TOOLCHAIN_ROOT / "vendor"
 TOOLCHAIN_SHIMS = TOOLCHAIN_ROOT / "shims"
 TOOLCHAIN_CONFIG = TOOLCHAIN_ROOT / "config"
 
-PY2_PYTHON = ROOT / "python" / "python.exe"
+PY2_PYTHON = Path(os.environ.get("AOS_PY2_PYTHON") or (ROOT / "python" / "python.exe"))
 PYINSTALLER_ENTRY = TOOLCHAIN_VENDOR / "PyInstaller-3.5" / "pyinstaller.py"
 ICON_PNG_SOURCES = [
     ROOT / "png" / "ui" / "aos16.png",
@@ -676,7 +676,30 @@ def build_legacy_runtime() -> Path:
         str(spec_root),
         str(spec_file),
     ]
-    subprocess.run(command, cwd=str(ROOT), env=pyinstaller_env(), check=True)
+
+    # The repo root ships a stale python27.dll from the original 2.7.10 game
+    # runtime. Because PyInstaller runs with cwd=ROOT, its dependency scanner
+    # would bundle that DLL instead of the build interpreter's own python27.dll.
+    # When the interpreter is a different 2.7.x (e.g. 2.7.18), its stdlib
+    # extensions like _ctypes.pyd then fail to load against the older DLL
+    # ("DLL load failed: The specified procedure could not be found"). Hide the
+    # repo copy for the duration of the build so the interpreter's matching DLL
+    # is bundled; the game's own .pyd modules are forward-compatible with it.
+    stale_dll = ROOT / 'python27.dll'
+    hidden_dll = ROOT / 'python27.dll.buildhidden'
+    restore_dll = False
+    if stale_dll.exists():
+        if hidden_dll.exists():
+            hidden_dll.unlink()
+        stale_dll.rename(hidden_dll)
+        restore_dll = True
+    try:
+        subprocess.run(command, cwd=str(ROOT), env=pyinstaller_env(), check=True)
+    finally:
+        if restore_dll and hidden_dll.exists():
+            if stale_dll.exists():
+                stale_dll.unlink()
+            hidden_dll.rename(stale_dll)
     runtime_dir = dist_root / 'aos'
     if not runtime_dir.exists():
         raise RuntimeError(f'Expected PyInstaller output at {runtime_dir}')
