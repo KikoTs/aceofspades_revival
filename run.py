@@ -28,6 +28,15 @@ elif __file__:
 os.chdir(application_path)
 sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], "..", "common")))
 
+# Source runs rely on the vendored pyglet 1.2dev (a compiled-only build that is
+# not published on PyPI, so it cannot go in requirements.txt). The frozen
+# release already bundles pyglet, so only prepend vendor/ when running from
+# source; inserting ahead of site-packages keeps the exact pinned build.
+if not getattr(sys, 'frozen', False):
+    _vendor_dir = os.path.join(application_path, "vendor")
+    if os.path.isdir(_vendor_dir) and _vendor_dir not in sys.path:
+        sys.path.insert(1, _vendor_dir)
+
 
 # Install this before aoslib imports the compiled HUD module.
 install_literal_eval_guard()

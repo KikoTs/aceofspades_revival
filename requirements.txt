@@ -1,0 +1,21 @@
+# AoS Revival client - Python 2.7 (32-bit) source-run dependencies.
+#
+# These are the ONLY pip packages the client needs to run from source; the
+# native modules (enet and every aoslib/shared .pyd) already ship in the repo.
+# Versions are pinned to the known-good runtime the release is built against -
+# do not bump them, most have dropped Python 2.7 support in later releases.
+#
+# Install into a Python 2.7 (32-bit) environment:
+#
+#     python -m pip install -r requirements.txt
+#
+# IMPORTANT: pyglet is intentionally NOT listed here. The client needs a
+# specific pyglet 1.2dev build that is not published on PyPI, so it is vendored
+# in the repo under vendor/pyglet/ instead. See the README "Running The Client
+# From Source" section - run.py adds vendor/ to sys.path automatically, so no
+# extra step is needed when you run from the repo. If you install into a
+# separate environment, copy vendor/pyglet into its site-packages.
+
+Twisted==15.4.0
+zope.interface==5.5.2
+toml==0.10.2

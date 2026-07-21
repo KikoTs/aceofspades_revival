@@ -48,6 +48,22 @@ You need:
 `launcher.py` is the entry point (it becomes `aos.exe`). It shows the launcher UI
 and, when re-invoked with `+s`, boots the game via `run.py`.
 
+### Dependencies
+
+Install the Python 2.7 pip dependencies once (Twisted, zope.interface, toml):
+
+```powershell
+.\python\python.exe -m pip install -r requirements.txt
+```
+
+pyglet is **not** in `requirements.txt` — the client needs a specific pyglet
+`1.2dev` build that is not on PyPI, so it is vendored in [`vendor/pyglet/`](vendor/pyglet).
+`run.py` adds `vendor/` to `sys.path` automatically on source runs, so no extra
+step is needed when you run from the repo. (If you run in a separate Python 2.7
+environment, either keep `vendor/` importable or copy `vendor/pyglet` into that
+environment's `site-packages`.) The native modules — `enet` and every
+`aoslib`/`shared` `.pyd` — already ship in the repo.
+
 Run the launcher:
 
 ```powershell
