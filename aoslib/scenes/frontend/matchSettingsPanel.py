@@ -1,7 +1,3 @@
-# uncompyle6 version 3.9.2
-# Python bytecode version base 2.7 (62211)
-# Decompiled from: Python 3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]
-# Embedded file name: C:\TeamCity\buildAgent\work\dc8eb0b1d2cf198a\Main\client\standalone\build\pyi.win32\run_obfuscated\out00-PYZ.pyz\aoslib.scenes.frontend.matchSettingsPanel
 from aoslib.scenes.frontend.listPanelBase import ListPanelBase
 from aoslib.scenes.frontend.lobbyPanelBase import LobbyPanelBase
 from aoslib.scenes.frontend.panelBase import BACKGROUND_NONE
@@ -16,18 +12,8 @@ from shared.constants_prefabs import A3056, A3037
 from shared.hud_constants import LIST_PANEL_SPACING, MATCH_SETTINGS_ROW_HEIGHT, MATCH_SETTINGS_ROW_SPACING
 from aoslib.media import HUD_AUDIO_ZONE
 from shared.constants_gamemode import A2448
-import local_host
-from aoslib.scenes.main import matchSettings as match_settings_module
 PRIVACY_TYPES_LIST = [
  strings.INVITE, strings.FRIENDS, strings.OPEN]
-
-# The stock slider reset path asks this table for defaults.  Extending it keeps
-# Defaults/Cancel consistent without special-casing retail list controls.
-match_settings_module.DEFAULT_MATCH_SETTINGS.update({
-    'BOT_COUNT': '0',
-    'BOT_DIFFICULTY': 'mixed',
-    'SERVER_PORT': str(local_host.DEFAULT_SERVER_PORT),
-})
 
 class MatchSettingsPanel(LobbyPanelBase):
 
@@ -216,9 +202,6 @@ class MatchSettingsPanel(LobbyPanelBase):
     def on_match_length_changed(self, value):
         self.cancel_game()
 
-    def on_local_setting_changed(self, value):
-        self.cancel_game()
-
     def cancel_game(self):
         self.on_cancel_game(silent=True, only_if_started=True)
 
@@ -241,23 +224,6 @@ class MatchSettingsPanel(LobbyPanelBase):
             default_text = get_display_name('GAME_RULES', self.lobby_id)
             rules = MatchSettingsMenuListItem(strings.GAME_RULES, 'GAME_RULES', self.lobby_id, self.open_edit_game_rules_menu, default_text)
             self.list_panel.rows.append(rules)
-            # Local-host controls deliberately follow Game Rules in the Match
-            # Lobby.  UGC editor lobbies keep their dedicated authoring rows.
-            if SteamGetLobbyData(self.lobby_id, 'LobbyType') == str(A2664):
-                local_defaults = (
-                 ('BOT_COUNT', '0'),
-                 ('BOT_DIFFICULTY', 'mixed'),
-                 ('SERVER_PORT', str(local_host.DEFAULT_SERVER_PORT)))
-                for settings_id, default_value in local_defaults:
-                    if SteamGetLobbyData(self.lobby_id, settings_id) == '':
-                        SteamSetLobbyData(settings_id, default_value)
-
-                bots = MatchSettingsSliderListItem('Bots', 'BOT_COUNT', self.lobby_id, local_host.BOT_COUNT_PRESETS, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)
-                self.list_panel.rows.append(bots)
-                difficulty = MatchSettingsSliderListItem('Bot Difficulty', 'BOT_DIFFICULTY', self.lobby_id, local_host.BOT_DIFFICULTIES, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)
-                self.list_panel.rows.append(difficulty)
-                port = local_host.create_server_port_row(self.manager, self.lobby_id, callback=self.on_local_setting_changed)
-                self.list_panel.rows.append(port)
         if self.enable_prefab_set:
             default_text = self.get_prefab_set_name()
             prefab_set = MatchSettingsMenuListItem(strings.PREFAB_SET, 'PREFAB_SET', self.lobby_id, self.open_prefab_set_menu, default_text)

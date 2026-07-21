@@ -1,7 +1,3 @@
-# uncompyle6 version 3.9.2
-# Python bytecode version base 2.7 (62211)
-# Decompiled from: Python 3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]
-# Embedded file name: C:\TeamCity\buildAgent\work\dc8eb0b1d2cf198a\Main\client\standalone\build\pyi.win32\run_obfuscated\out00-PYZ.pyz\aoslib.scenes.frontend.baseSquadLobbyMenu
 from aoslib.scenes.frontend.listPreviewMenuBase import ListPreviewMenuBase
 from aoslib.scenes.frontend.previewPanelBase import PreviewPanelBase
 from aoslib.scenes.frontend.listPanelBase import ListPanelBase
@@ -15,6 +11,7 @@ from aoslib.scenes.frontend.ugcModePanel import UGCModePanel
 from aoslib.draw import draw_line
 from aoslib.gui import TextButton
 from aoslib.draw import draw_line
+import local_host
 from aoslib import strings
 from shared.steam import SteamGetPersonaName, SteamGetLobbyMembers, SteamGetCurrentLobby, SteamGetLobbyMemberName, SteamGetPersonaName, SteamShowInviteFriendOverlay, SteamLeaveLobby, SteamGetLobbyOwner, SteamAmITheLobbyOwner, SteamSetLobbyData, SteamSetLobbyMemberData, SteamGetLobbyData, SteamGetLobbyMemberData, SteamSendChatMessage, SteamSetLobbyGameServer, SteamGetLobbyGameServer, SteamClearLobbyGameServer, GetUserSteamID, SteamIsLoggedOn
 from aoslib.scenes.frontend.squadChatLog import *
@@ -22,10 +19,7 @@ from aoslib.squadEventManager import *
 from twisted.internet import reactor
 from aoslib.tools import make_server_identifier, ip_to_int
 from shared.steam import SteamGetSessionTicket, SteamGetAllLobbyData, SteamActivateGameOverlayToStore
-# The retail constants module exports only its obfuscated runtime aliases.
-# Decompiled symbolic names are useful documentation, but importing them from
-# the shipped Python 2 module raises ImportError in a frozen client.
-from shared.constants import A941 as ERROR_KICKED, A0 as SPADES_GAME_APP_ID
+from shared.constants import ERROR_KICKED, SPADES_GAME_APP_ID
 from shared.constants_shop import DLC_APPID_LIST
 from aoslib.scenes.frontend.customServerJoiner import CustomServerJoiner
 from aoslib.scenes.frontend.playlistServerJoiner import PlaylistServerJoiner
@@ -34,10 +28,9 @@ from aoslib.images import global_images
 from pyglet import gl
 from aoslib.text import medium_aldo_ui_font, draw_text_with_alignment_and_size_validation, modify_name_to_fix_width
 import playlists, random
-from shared.constants import A55 as TEAM1, A56 as TEAM2, TEAM_NEUTRAL, A58 as TEAM_COLOURS
+from shared.constants import TEAM1, TEAM2, TEAM_NEUTRAL, TEAM_COLOURS
 from shared.hud_constants import LIST_PANEL_SPACING, DARK_GREEN_COLOUR, TEXT_BACKGROUND_SPACING
 import time
-import local_host
 from aoslib.media import HUD_AUDIO_ZONE
 import ast
 from aoslib.common import get_map_value_safe
@@ -99,12 +92,12 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
         self.playlist_panel = PlayListPanel(self.manager, self.ugc_mode)
         self.playlist_panel.on_playlist_selected_callback = self.update_team_id_on_playlist_selected
         self.prefab_sets_panel = PrefabSetsPanel(self.manager)
-        self.panels = {PANEL_PREVIEW: (self.preview_panel),
-           PANEL_SETTINGS: (self.match_settings_panel),
-           PANEL_RULES: (self.game_rules_panel),
-           PANEL_PLAYLISTS: (self.playlist_panel),
-           PANEL_UGC_MODE: (self.ugc_mode_panel),
-           PANEL_MAPS: (self.maps_panel),
+        self.panels = {PANEL_PREVIEW: (self.preview_panel), 
+           PANEL_SETTINGS: (self.match_settings_panel), 
+           PANEL_RULES: (self.game_rules_panel), 
+           PANEL_PLAYLISTS: (self.playlist_panel), 
+           PANEL_UGC_MODE: (self.ugc_mode_panel), 
+           PANEL_MAPS: (self.maps_panel), 
            PANEL_PREFAB_SETS: (self.prefab_sets_panel)}
         for id, panel in self.panels.iteritems():
             if panel is not None:
@@ -167,9 +160,9 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
             self.elements.append(self.playlist_panel)
             self.elements.append(self.prefab_sets_panel)
             self.navigation_bar.left_button_text = strings.LEAVE_LOBBY
-            self.dropdown_options = {OPTION_TEAM1: 'TEAM1_COLOR',
-               OPTION_TEAM_NEUTRAL: 'TEAM_NEUTRAL',
-               OPTION_TEAM2: 'TEAM2_COLOR',
+            self.dropdown_options = {OPTION_TEAM1: 'TEAM1_COLOR', 
+               OPTION_TEAM_NEUTRAL: 'TEAM_NEUTRAL', 
+               OPTION_TEAM2: 'TEAM2_COLOR', 
                OPTION_KICK_PLAYER: 'KICK_PLAYER'}
             self.list_panel.initialise_ui(None, 56, 505, 340, 270, row_height=25, has_header=True)
             self.list_panel.title_width = 210
@@ -693,9 +686,10 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
     def on_start_game(self):
         self.media.stop_sounds()
         self.media.play('menu_confirmA', zone=HUD_AUDIO_ZONE)
-        # Translate the lobby snapshot into a disposable TOML and start the
-        # bundled server without exposing a console window.  A readiness probe
-        # gates LoadingMenu so a slow bot worker/map load cannot race connect.
+        # Revival: host the match on the bundled BattleSpades server instead of
+        # the Steam server-finder. local_host generates a per-session config,
+        # spawns the hidden server, and gates LoadingMenu on an A2S readiness
+        # probe before connecting. It also sets starting_game / updates buttons.
         local_host.start_lobby(self)
 
     def get_num_player_slots_required(self):
@@ -734,9 +728,8 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
             self.do_cancel_game()
 
     def do_cancel_game(self):
-        # A cancelled local launch owns a hidden process and readiness worker;
-        # retire both before resetting the lobby state.  This is a no-op for
-        # ordinary Steam-emulator lobbies.
+        # Revival: stop the bundled local server we may have spawned for this
+        # lobby so its hidden process is never orphaned.
         local_host.stop_active_session(self.manager)
         self.starting_game = False
         if self.start_game_tick_callback:
@@ -982,17 +975,17 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
             playlist = playlists.play_lists_by_id[playlist_id]
             max_players = get_map_value_safe(lobby_data, 'MAX_PLAYERS', default_value='24')
             ugc_modes = get_string_as_list(ugc_modes_string)
-            config = {'mode': modes_string,
-               'ugc_modes': ugc_modes,
-               'playlist_id': playlist_id,
-               'ranked': False,
-               'classic': (playlist.classic),
-               'skin': ('mafia' if playlist.mafia else ''),
-               'max_players': max_players,
-               'maps': map_list,
-               'name': 'Private server',
-               'forced_team_members': forced_team_members,
-               'match_length': match_length,
+            config = {'mode': modes_string, 
+               'ugc_modes': ugc_modes, 
+               'playlist_id': playlist_id, 
+               'ranked': False, 
+               'classic': (playlist.classic), 
+               'skin': ('mafia' if playlist.mafia else ''), 
+               'max_players': max_players, 
+               'maps': map_list, 
+               'name': 'Private server', 
+               'forced_team_members': forced_team_members, 
+               'match_length': match_length, 
                'prefab_sets': prefab_sets}
             for key, value in lobby_data.iteritems():
                 if key in A2688.keys():
