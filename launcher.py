@@ -350,18 +350,26 @@ def install_game_output_streams():
 
 
 def missing_game_files():
-    """List essential recovered-client files absent from this extraction."""
-    if getattr(sys, "frozen", False):
-        library_root = os.path.join(APP_DIR, "lib")
-    else:
-        library_root = APP_DIR
+    """List essential client files absent from this install.
+
+    The PyInstaller release packs the Python client code into ``aos.pkg``
+    (loaded by the bootloader), so there is no loose ``lib/run.py`` to probe as
+    the old cx_Freeze layout had. Verify the packaged archive plus the loose
+    asset folders that a partial extraction would drop; when running from source
+    the client modules are loose ``.py`` files instead.
+    """
     required = [
-        os.path.join(APP_DIR, "steam_api.dll"),
-        os.path.join(APP_DIR, "codex.dll"),
-        os.path.join(library_root, "run.py"),
-        os.path.join(library_root, "aoslib", "run.py"),
+        os.path.join(APP_DIR, "config.txt"),
+        os.path.join(APP_DIR, "png"),
+        os.path.join(APP_DIR, "sounds"),
+        os.path.join(APP_DIR, "maps"),
     ]
-    return [path for path in required if not os.path.isfile(path)]
+    if getattr(sys, "frozen", False):
+        required.append(os.path.join(APP_DIR, "aos.pkg"))
+    else:
+        required.append(os.path.join(APP_DIR, "run.py"))
+        required.append(os.path.join(APP_DIR, "aoslib", "run.py"))
+    return [path for path in required if not os.path.exists(path)]
 
 
 def account_display(account):
@@ -638,26 +646,32 @@ class Launcher(object):
         self.root.geometry("%dx%d+%d+%d" % (self.WIDTH, self.HEIGHT, x, y))
 
     def _draw_background(self):
-        png_path = os.path.join(ASSET_DIR, "background.png")
-        ppm_path = os.path.join(ASSET_DIR, "background.ppm")
-        try:
-            self._background_original = tk.PhotoImage(file=png_path)
-        except tk.TclError:
+        # Tk 8.5 (the bundled runtime) only decodes GIF and PPM/PGM in
+        # PhotoImage, not PNG, so ship the launcher background as a PPM sized to
+        # the window. Try PPM first, then GIF, then PNG (for a Tk 8.6 dev run).
+        self._background_original = None
+        for candidate in (
+            os.path.join(ASSET_DIR, "background.ppm"),
+            os.path.join(ASSET_DIR, "background.gif"),
+            os.path.join(ASSET_DIR, "background.png"),
+        ):
+            if not os.path.isfile(candidate):
+                continue
             try:
-                self._background_original = tk.PhotoImage(file=ppm_path)
+                self._background_original = tk.PhotoImage(file=candidate)
+                break
             except tk.TclError:
-                self._background_original = None
-                append_launcher_log(
-                    "Launcher background is missing; using the safe solid-color fallback."
-                )
+                continue
         if self._background_original is not None:
-            # Pixel-perfect 1.25x nearest-neighbour scale: the original art
-            # fills the larger command-center layout without blur.
-            self.background = self._background_original.zoom(5, 5).subsample(4, 4)
+            # The PPM is authored at the window size, so draw it 1:1.
+            self.background = self._background_original
             self.canvas.create_image(0, 0, image=self.background, anchor="nw")
         else:
             self.background = None
-            self.canvas.create_rectangle(0, 0, 1000, 700, fill=OLIVE_DARK, outline="")
+            self.canvas.create_rectangle(0, 0, self.WIDTH, self.HEIGHT, fill=OLIVE_DARK, outline="")
+            append_launcher_log(
+                "Launcher background is missing; using the safe solid-color fallback."
+            )
         self.canvas.create_rectangle(500, 145, 980, 683, fill=PANEL, outline=INK, width=4)
         self.canvas.create_rectangle(510, 155, 970, 673, fill="", outline=OLIVE, width=2)
 
