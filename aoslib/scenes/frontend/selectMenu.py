@@ -1,3 +1,5 @@
+# 2025.03.01 18:38:06 
+#Embedded file name: C:\TeamCity\buildAgent\work\dc8eb0b1d2cf198a\Main\client\standalone\build\pyi.win32\run_obfuscated\out00-PYZ.pyz\aoslib.scenes.frontend.selectMenu
 import time
 from aoslib.scenes import MenuScene
 from aoslib.text import welcome_font, START_FONT, split_text_to_fit_screen, ALDO_FONT, draw_text_with_alignment_and_size_validation, draw_text_within_boundaries
@@ -145,6 +147,9 @@ class SelectMenu(MenuScene):
             if self.showing_error:
                 SteamClearRichPresence()
                 self.manager.clear_big_text_message()
+            # Match the retail client: valid, logged-on players can reach every
+            # main-menu action. Service compatibility belongs in each action's
+            # backend, not in a permanent UI lockout.
             self.tutorial_button.enabled = True
             self.achievements_button.enabled = True
             self.leaderboard_button.enabled = True
@@ -175,8 +180,7 @@ class SelectMenu(MenuScene):
         gl.glColor4f(1.0, 1.0, 1.0, 1.0)
         if self.showing_game_buy_button:
             gl.glColor4f(1.0, 1.0, 1.0, 1.0)
-            if global_images.buy_game_background is not None:
-                global_images.buy_game_background.blit(677, 170)
+            global_images.buy_game_background.blit(677, 170)
             self.game_description.draw()
             draw_text_within_boundaries(self.buy_game_title._text, self.buy_game_title.x, self.buy_game_title.y, self.buy_game_title.width, self.buy_game_title.height, self.buy_game_title.font, 5, self.buy_game_title.color, alignment='center')
         global_images.main_menu_frame.blit(400, 236)
@@ -216,7 +220,11 @@ class SelectMenu(MenuScene):
 
     def tutorial_pressed(self):
         self.media.play('menu_confirmA', zone=HUD_AUDIO_ZONE)
-        self.manager.set_menu(JoiningGameMenu, config=self.config, in_game_menu=False, server_mode=A2389)
+        # Tutorial is a real isolated BattleSpades server.  Launching through
+        # the same local-host boundary as Match Lobby keeps the native retail
+        # client and packet flow unchanged while hiding the server console.
+        import local_host
+        local_host.start_tutorial(self)
 
     def credits_pressed(self):
         self.media.play('menu_confirmA', zone=HUD_AUDIO_ZONE)

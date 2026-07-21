@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os, sys, subprocess
+
+from retail_compat import install_literal_eval_guard
 
 '''
 # No longer necessary as the public build has no console
@@ -19,12 +21,19 @@ print 'Starting Ace of Spades...'
 print 'Debug: %s' % __debug__
 PROGRESSBAR_ICON_BASE = 0x50
 if getattr(sys, 'frozen', False):
-    application_path = os.path.dirname(sys.executable)
+    application_path = os.path.dirname(os.path.abspath(sys.executable))
 elif __file__:
-    application_path = os.path.dirname(__file__)
+    application_path = os.path.dirname(os.path.abspath(__file__))
 
-os.chdir(os.path.join(os.getcwd(), application_path))
-sys.path.insert(1, sys.path[0] + "/../common")
+os.chdir(application_path)
+sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], "..", "common")))
+
+
+# Install this before aoslib imports the compiled HUD module.
+install_literal_eval_guard()
+# Install before aoslib.run schedules GameManager.update. LoadingMenu then
+# acknowledges each retained-peer map transition before InitialInfo is sent.
+import session_transition_patch
 
 def init_log():
     global logging_file
@@ -37,14 +46,35 @@ def init_log():
         os.makedirs(os.path.dirname(log_file))
     except OSError:
         pass
+
     logging_file = DailyLogFile(log_file, '.')
-    log.addObserver(log.FileLogObserver(logging_file).emit)
-    log.startLogging(sys.stdout)
+
+    if sys.argv[0] != "launcher.py":
+        log.startLogging(logging_file, setStdout=True)
+
+    if sys.argv[0] == "launcher.py":
+        log.addObserver(log.FileLogObserver(logging_file).emit)
+        log.startLogging(sys.stdout)
+
     log.msg('AoS client started on %s' % time.strftime('%c'))
-    log.startLogging(sys.stdout) # force twisted logging
+
+    if sys.argv[0] == "launcher.py":
+        log.startLogging(sys.stdout) # force twisted logging
 
 if '+debug' in sys.argv:
     init_log()
+    if sys.argv[0] != "launcher.py":
+        # debugger.exe is an optional frozen-build log viewer. Source runs do
+        # not contain it, and a missing/corrupt viewer must never abort the
+        # actual game bootstrap.
+        debugger_path = os.path.join(application_path, "debugger.exe")
+        if os.path.isfile(debugger_path):
+            try:
+                subprocess.Popen([debugger_path], cwd=application_path)
+            except (OSError, ValueError) as error:
+                print 'Could not start optional debugger viewer: %s' % error
+        else:
+            print 'Optional debugger viewer not found: %s' % debugger_path
 
 try:
     import aoslib.run

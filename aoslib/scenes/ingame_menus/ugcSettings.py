@@ -1,3 +1,7 @@
+# uncompyle6 version 3.9.2
+# Python bytecode version base 2.7 (62211)
+# Decompiled from: Python 3.12.0 (tags/v3.12.0:0fb18b0, Oct  2 2023, 13:03:39) [MSC v.1935 64 bit (AMD64)]
+# Embedded file name: C:\TeamCity\buildAgent\work\dc8eb0b1d2cf198a\Main\client\standalone\build\pyi.win32\run_obfuscated\out00-PYZ.pyz\aoslib.scenes.ingame_menus.ugcSettings
 from aoslib.scenes.frontend.panelBase import BACKGROUND_NONE
 from aoslib.scenes.frontend.expandableListPanel import ExpandableListPanel
 from aoslib.scenes.main.settingsSliderControlListItem import SettingsSliderControlListItem
@@ -20,19 +24,23 @@ from aoslib.scenes import Scene, ElementScene, MenuScene
 from aoslib.gui import TextButton
 from aoslib.text import title_font, draw_text_with_size_validation
 from pyglet import gl
-from shared.constants import MENU_FONT_COLOR, FLY_CAMERA
+from shared.constants import A1054, A986
 from shared.common import get_skydomes_names, clamp
 from aoslib.scenes.ingame_menus.screenshotHud import ScreenshotHud
 from aoslib.scenes.frontend.ugcModePanel import get_ugc_lobby_modes
 from aoslib.scenes.main.matchSettings import get_list_items_as_string
 from shared.constants_gamemode import A2448, A2451
 import os
+import local_host
 
 class UGCSettings(MenuScene):
     content_frame = global_images.ingame_settings_content_frame
 
     def initialize(self):
-        if not self.manager.game_scene.is_ugc_host():
+        if not (
+            self.manager.game_scene.is_ugc_host()
+            or local_host.is_local_ugc_host(self.manager)
+        ):
             self.cancel_pressed()
         self.x = 152
         self.y = 495
@@ -148,7 +156,7 @@ class UGCSettings(MenuScene):
         title_y = 534
         title_width = 300
         title_height = 80
-        draw_text_with_size_validation(strings.SETTINGS.upper(), mid_x - title_width / 2, title_y - title_height / 2, title_width, title_height, MENU_FONT_COLOR, font=title_font)
+        draw_text_with_size_validation(strings.SETTINGS.upper(), mid_x - title_width / 2, title_y - title_height / 2, title_width, title_height, A1054, font=title_font)
         for element in self.elements:
             element.draw()
 
@@ -166,7 +174,7 @@ class UGCSettings(MenuScene):
 
     def on_map_preview_set_clicked(self):
         self.scene.disable_player_input = True
-        self.scene.camera_manager.activate_controller(FLY_CAMERA, None, self.scene.player)
+        self.scene.camera_manager.activate_controller(A986, None, self.scene.player)
         self.manager.set_menu(ScreenshotHud)
         return
 
@@ -182,6 +190,10 @@ class UGCSettings(MenuScene):
         self.media.play('menu_confirmA', zone=HUD_AUDIO_ZONE)
         self.scene.set_ugc_preview_image()
         SteamSetLobbyData('MAP_ROTATION_NEW_TITLE', self.map_title)
+        # The local dedicated editor, not the Steam-emulator lobby, owns the
+        # persisted sidecar.  Relay the title over its private host-only
+        # command so the next checkpoint cannot restore the old value.
+        local_host.send_local_ugc_title(self.manager, self.map_title)
         ugc_data = self.manager.client.ugc_data
         self.manager.game_scene.set_water_color(self.water_colour)
         if self.skybox and len(self.skybox) > 0:
@@ -231,7 +243,10 @@ class UGCSettings(MenuScene):
             self.water_preview_row.set_value(self.water_colour)
 
     def on_save_map_modified(self, name):
-        if not self.manager.game_scene.is_ugc_host():
+        if not (
+            self.manager.game_scene.is_ugc_host()
+            or local_host.is_local_ugc_host(self.manager)
+        ):
             return
         self.map_title = name
 

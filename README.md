@@ -6,8 +6,10 @@ This repo is set up to:
 
 - run the client from source while keeping the original Windows runtime layout
 - build release packages in the original `aos.exe` + `aos.pkg` format
-- keep Steam as the intended platform path
-- avoid shipping `steam_emu` or an external launcher
+- ship the AoS Revival launcher folded into `aos.exe` (no separate launcher process)
+- talk to the aosplay.net master service for accounts, the server list, and profiles
+- host local Play / Tutorial / UGC matches via the bundled BattleSpades server
+- avoid shipping `steam_emu`
 
 ## Current Status
 
@@ -43,7 +45,16 @@ You need:
 
 ## Running The Client From Source
 
-Normal run:
+`launcher.py` is the entry point (it becomes `aos.exe`). It shows the launcher UI
+and, when re-invoked with `+s`, boots the game via `run.py`.
+
+Run the launcher:
+
+```powershell
+.\python\python.exe launcher.py
+```
+
+Skip the launcher and boot the game directly (what the launcher does internally):
 
 ```powershell
 .\python\python.exe run.py
@@ -107,11 +118,15 @@ The staged release contains:
 - native `.pyd` and `.dll` files
 - loose asset folders such as `png/`, `maps/`, `mesh/`, `sounds/`, and `music/`
 
+The staged release also includes:
+
+- `config_user.json` (username/language read by `shared/steam.py`)
+- `server/` — the bundled BattleSpades dedicated server for local matches
+
 The shipped release does not include:
 
 - the local `python/` runtime folder
 - `steam_emu*`
-- the removed external launcher path
 
 ## How The Repo Is Organized
 

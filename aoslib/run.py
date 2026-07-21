@@ -6,8 +6,12 @@ import shared.constants_prefabs
 from shared.common import enable_crashdump
 import pyglet
 pyglet.options['shadow_window'] = False
+
+#fix mouse
+#thx el Beshuele
 from aoslib.pyglet_win32_raw_mouse import install as install_pyglet_win32_raw_mouse
 install_pyglet_win32_raw_mouse()
+
 SteamInitializeClient()
 import sys
 import ctypes
@@ -98,6 +102,22 @@ class Window(pyglet.window.Window):
         self.setting_fullscreen = False
 
     def on_close(self):
+        # Window close ends this runtime with os._exit below, which bypasses
+        # atexit handlers. Retire a menu-owned hidden server explicitly first
+        # so Alt+F4/the window close button cannot leave an orphan listener.
+        try:
+            import local_host
+            local_host.stop_active_session()
+        except Exception:
+            try:
+                local_host._append_local_host_log(
+                    'window-close local server shutdown raised',
+                    exc_info=sys.exc_info(),
+                )
+            except Exception:
+                # Closing the game must remain possible even if the optional
+                # local-host integration was not packaged or cannot log.
+                pass
         super(Window, self).on_close()
         from twisted.internet import reactor
         if reactor.running:

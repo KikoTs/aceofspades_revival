@@ -1,14 +1,19 @@
+# uncompyle6 version 3.9.2
+# Python bytecode version base 2.7 (62211)
+# Decompiled from: Python 3.12.0 (tags/v3.12.0:0fb18b0, Oct  2 2023, 13:03:39) [MSC v.1935 64 bit (AMD64)]
+# Embedded file name: C:\TeamCity\buildAgent\work\dc8eb0b1d2cf198a\Main\client\standalone\build\pyi.win32\run_obfuscated\out00-PYZ.pyz\aoslib.scenes.ingame_menus.escapeMenu
 from aoslib.scenes import MenuScene, ElementScene
 from aoslib.gui import TextButton
 from aoslib.images import global_images
 from aoslib.text import title_font
 from pyglet.window import key
 from pyglet import gl
-from shared.constants import MENU_FONT_COLOR, A2437, A2445, A2442, CLASS_ITEMS, CLASS_CLASSIC_SOLDIER, CLASS_PRIMARY_WEAPONS, CLASS_SECONDARY_WEAPONS, CLASS_EQUIPMENT, CLASS_MELEE, CLASS_GANGSTER_VIP_1, CLASS_GANGSTER_VIP_2
+from shared.constants import A1054, A2437, A2445, A2442, A554, A79, A516, A517, A518, A515, A84, A85
 from aoslib import strings
 from aoslib.media import HUD_AUDIO_ZONE
 from aoslib.hud.hud import ViewGameStats
 from aoslib.scenes.gui.messageBox import *
+import local_host
 MESSAGE_SAVE_BEFORE_QUIT, MESSAGE_ON_SAVE, MESSAGE_QUIT_AFTER_SAVE = xrange(3)
 
 class EscapeMenu(MenuScene):
@@ -61,7 +66,13 @@ class EscapeMenu(MenuScene):
 
     def setup_correct_buttons(self):
         game_scene = self.manager.game_scene
-        self.is_ugc_host = game_scene.is_ugc_host()
+        # Dedicated Map Creator sockets must stay UGC CLIENT on packet 114 or
+        # retail enters a Steam-lobby loading branch and crashes.  Local menu
+        # ownership is therefore a separate, process-scoped capability.
+        self.is_ugc_host = (
+            game_scene.is_ugc_host()
+            or local_host.is_local_ugc_host(self.manager)
+        )
         self.save_button.enabled = self.is_ugc_host
         self.disconnect_button.enabled = not self.is_ugc_host
         self.quit_button.visible = self.is_ugc_host
@@ -121,6 +132,9 @@ class EscapeMenu(MenuScene):
             self.manager.disconnect()
         self.media.stop_sounds()
         self.media.play('menu_backA', zone=HUD_AUDIO_ZONE)
+        # The child has no console window.  Closing the client must drive its
+        # stdin shutdown channel so round cleanup and UGC VXL persistence run.
+        local_host.stop_active_session(self.manager)
 
     def message_box_button_one_pressed(self):
         self.hide_message_box()
@@ -225,7 +239,7 @@ class EscapeMenu(MenuScene):
         if game_scene.current_mode is A2442:
             self.change_class_button.enabled = False
             self.change_class_button.visible = False
-            if game_scene.player is not None and game_scene.player.current_class is not None and (game_scene.player.current_class.id is CLASS_GANGSTER_VIP_1 or game_scene.player.current_class.id is CLASS_GANGSTER_VIP_2):
+            if game_scene.player is not None and game_scene.player.current_class is not None and (game_scene.player.current_class.id is A84 or game_scene.player.current_class.id is A85):
                 self.change_team_button.enabled = False
                 self.change_team_button.visible = False
         return super(EscapeMenu, self).update(dt)
@@ -240,6 +254,6 @@ class EscapeMenu(MenuScene):
         else:
             title_y = y + 160
             global_images.pause_menu_frame.blit(x, y)
-        title_font.draw(self.title.upper(), x, title_y, MENU_FONT_COLOR, center=True)
+        title_font.draw(self.title.upper(), x, title_y, A1054, center=True)
         for element in self.elements:
             element.draw()

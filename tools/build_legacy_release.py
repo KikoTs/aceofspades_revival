@@ -104,6 +104,7 @@ EXTRA_RUNTIME_FILES = [
     "api_interfaces_32.txt",
     "codex.dll",
     "config.txt",
+    "config_user.json",
     "enet.pyd",
     "GameOverlayRenderer.dll",
     "libsndfile-1.dll",
@@ -111,6 +112,34 @@ EXTRA_RUNTIME_FILES = [
     "steam_appid.txt",
     "steamclient.dll",
 ]
+
+# Revival client modules and the Tkinter launcher UI are imported lazily
+# (e.g. ``import run`` inside launcher.game_start, ``import local_host`` inside
+# menu scenes), so PyInstaller's static analysis can miss them. Force them in.
+REVIVAL_HIDDEN_IMPORTS = [
+    "launcher",
+    "run",
+    "local_host",
+    "revival_api",
+    "revival_http",
+    "revival_crypto",
+    "revival_store",
+    "retail_compat",
+    "session_transition_patch",
+    # Tkinter launcher UI (Python 2 module names)
+    "Tkinter",
+    "ttk",
+    "tkMessageBox",
+    "tkSimpleDialog",
+    "FixTk",
+    "_tkinter",
+    "ConfigParser",
+    "Queue",
+]
+
+# The bundled BattleSpades dedicated server that local_host.py launches for
+# Play / Tutorial / UGC. Override with AOS_BATTLESPADES_SERVER.
+BATTLESPADES_BUNDLE = ROOT.parent / "BattleSpades" / "dist" / "BattleSpades"
 
 PKG_RESOURCES_SHIM = '''from __future__ import absolute_import
 
@@ -385,7 +414,7 @@ a = Analysis([{run_script!r}],
              hiddenimports={hiddenimports!r},
              hookspath=[],
              runtime_hooks=[],
-             excludes=['Tkinter', '_tkinter', 'FixTk', 'setuptools', 'future', 'builtins'],
+             excludes=['setuptools', 'future', 'builtins'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher,
@@ -602,13 +631,15 @@ def collect_hidden_imports() -> list[str]:
             hidden_imports.add('.'.join(relative_parts))
             hidden_imports.add('.'.join(relative_parts[1:]))
 
+    hidden_imports.update(REVIVAL_HIDDEN_IMPORTS)
+
     return sorted(name for name in hidden_imports if name)
 
 
 def write_spec_file(spec_path: Path) -> None:
     ensure_directory(spec_path.parent)
     payload = SPEC_TEMPLATE.format(
-        run_script=str(ROOT / 'run.py'),
+        run_script=str(ROOT / 'launcher.py'),
         root=str(ROOT),
         hiddenimports=collect_hidden_imports(),
         icon_source=resolve_icon_source(),
@@ -683,6 +714,28 @@ def copy_extra_runtime_files(stage_dir: Path) -> None:
         source = ROOT / filename
         if source.exists():
             shutil.copy2(source, stage_dir / filename)
+
+
+def copy_server_bundle(stage_dir: Path) -> None:
+    """Stage the bundled BattleSpades dedicated server next to aos.exe.
+
+    local_host.resolve_server_bundle() looks for ``<app>/server/BattleSpades.exe``
+    (the frozen exe's own directory) first, so the server must ship as a
+    ``server/`` sibling of aos.exe for Play / Tutorial / UGC to work.
+    """
+    configured = os.environ.get('AOS_BATTLESPADES_SERVER')
+    source = Path(configured) if configured else BATTLESPADES_BUNDLE
+    server_exe = source / 'BattleSpades.exe'
+    if not server_exe.exists():
+        raise RuntimeError(
+            f'Bundled BattleSpades server not found at {source}. '
+            'Build the BattleSpades dist first, or set AOS_BATTLESPADES_SERVER '
+            'to the folder containing BattleSpades.exe.'
+        )
+    destination = stage_dir / 'server'
+    if destination.exists():
+        shutil.rmtree(destination)
+    shutil.copytree(source, destination)
 
 
 def ensure_debug_pkg(stage_dir: Path) -> None:
@@ -764,6 +817,7 @@ def stage_release(runtime_dir: Path, version: str) -> Path:
     copy_package_extensions(ROOT / 'shared', stage_dir)
     copy_assets(stage_dir)
     copy_extra_runtime_files(stage_dir)
+    copy_server_bundle(stage_dir)
     ensure_debug_pkg(stage_dir)
     write_stage_metadata(stage_dir, version)
     return stage_dir
