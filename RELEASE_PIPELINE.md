@@ -34,6 +34,8 @@ The build writes:
 - `build/releases/AoSRevival-<version>-win32/`
 - `build/artifacts/AoSRevival-<version>-win32-full.zip`
 - `build/artifacts/AoSRevival-<version>-pkg-only.zip`
+- `build/artifacts/AoSRevival-<version>-win32-full-solid.7z`
+- `build/artifacts/AoSRevival-<version>-SHA256SUMS.txt`
 
 The staged release contains:
 
@@ -56,3 +58,11 @@ The staged release contains:
   The compiled `shared/steam.pyd` has been removed so the source module wins.
 - `aos.pkg` contains the Python-side game code, so small code-only updates can
   usually ship as `AoSRevival-<version>-pkg-only.zip`.
+- The final `aos.exe` is the unmodified, SHA-256-pinned PyInstaller 3.5
+  windowed bootloader. `aos.pkg` stays external and `game.ico` supplies the UI
+  icon, so the build does not mutate the executable's PE resources.
+- Automatic updates require the canonical
+  `AoSRevival-<version>-win32-full.zip` GitHub release asset. The launcher
+  authenticates its GitHub-provided SHA-256 digest and size, safely extracts
+  it, verifies the complete build manifest, preserves user/server config, and
+  performs the replacement only after the launcher exits.

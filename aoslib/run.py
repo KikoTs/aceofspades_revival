@@ -423,6 +423,8 @@ class BootClass:
         print 'Creating game manager...'
         from aoslib.gamemanager import GameManager
         self.manager = GameManager(global_config, window)
+        from aoslib.parachute_key_patch import install as install_parachute_key
+        install_parachute_key(self.manager)
         self.manager.preload_favourite_servers()
         print 'Game manager created'
         loadingscreen.finished()

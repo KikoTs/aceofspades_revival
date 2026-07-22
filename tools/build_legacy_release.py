@@ -27,6 +27,11 @@ TOOLCHAIN_CONFIG = TOOLCHAIN_ROOT / "config"
 
 PY2_PYTHON = Path(os.environ.get("AOS_PY2_PYTHON") or (ROOT / "python" / "python.exe"))
 PYINSTALLER_ENTRY = TOOLCHAIN_VENDOR / "PyInstaller-3.5" / "pyinstaller.py"
+CLEAN_WINDOWED_BOOTLOADER = (
+    TOOLCHAIN_VENDOR / "PyInstaller-3.5" / "PyInstaller" / "bootloader"
+    / "Windows-32bit" / "runw.exe"
+)
+CLEAN_WINDOWED_BOOTLOADER_SHA256 = "c1a739b7105704dbb94153f93c6d6588920d40385d65a973ca10a1b6682ce88e"
 ICON_PNG_SOURCES = [
     ROOT / "png" / "ui" / "aos16.png",
     ROOT / "png" / "ui" / "aos32.png",
@@ -38,12 +43,14 @@ PRODUCT_NAME = "AoS Revival"
 MANIFEST_NAME = "build_manifest.json"
 PKG_MANIFEST_NAME = "pkg_manifest.json"
 VERSION_FILENAME = "version.txt"
+SOURCE_VERSION_FILE = ROOT / "VERSION"
 
 TOOLCHAIN_COMPONENTS = [
     {
         "name": "PyInstaller-3.5",
         "archive": "PyInstaller-3.5.tar.gz",
         "url": "https://files.pythonhosted.org/packages/source/P/PyInstaller/PyInstaller-3.5.tar.gz",
+        "sha256": "ee7504022d1332a3324250faf2135ea56ac71fdb6309cff8cd235de26b1d0a96",
     },
     {
         "name": "altgraph-0.17",
@@ -121,6 +128,8 @@ REVIVAL_HIDDEN_IMPORTS = [
     "revival_http",
     "revival_crypto",
     "revival_store",
+    "revival_updater",
+    "aoslib.parachute_key_patch",
     "retail_compat",
     "session_transition_patch",
     # Tkinter launcher UI (Python 2 module names)
@@ -442,7 +451,7 @@ release_exe = EXE(pyz,
                   strip=False,
                   upx=True,
                   console=False,
-                  icon={icon_source!r},
+                  icon=None,
                   pkgname='aos.pkg',
                   append_pkg=False)
 debug_exe = EXE(pyz,
@@ -455,7 +464,7 @@ debug_exe = EXE(pyz,
                 strip=False,
                 upx=True,
                 console=True,
-                icon={icon_source!r},
+                icon=None,
                 pkgname='aos.pkg',
                 append_pkg=False)
 coll = COLLECT(release_exe,
@@ -516,6 +525,12 @@ def ensure_toolchain_component(component: dict[str, str]) -> None:
         return
     archive_path = TOOLCHAIN_DOWNLOADS / component['archive']
     download_file(component['url'], archive_path)
+    expected_sha256 = component.get('sha256')
+    if expected_sha256 and compute_sha256(archive_path) != expected_sha256:
+        archive_path.unlink(missing_ok=True)
+        raise RuntimeError(
+            f"Toolchain archive failed SHA-256 verification: {component['archive']}"
+        )
     extract_archive(archive_path, TOOLCHAIN_VENDOR)
 
 
@@ -653,7 +668,6 @@ def write_spec_file(spec_path: Path) -> None:
         run_script=str(ROOT / 'launcher.py'),
         root=str(ROOT),
         hiddenimports=collect_hidden_imports(),
-        icon_source=resolve_icon_source(),
     )
     spec_path.write_text(payload, encoding='utf-8')
 
@@ -715,7 +729,31 @@ def build_legacy_runtime() -> Path:
     runtime_dir = dist_root / 'aos'
     if not runtime_dir.exists():
         raise RuntimeError(f'Expected PyInstaller output at {runtime_dir}')
+    restore_clean_windowed_bootloader(runtime_dir)
     return runtime_dir
+
+
+def restore_clean_windowed_bootloader(runtime_dir: Path) -> None:
+    """Use the pristine, pinned PyInstaller launcher as the release executable.
+
+    ``aos.pkg`` remains external, so the stock windowed bootloader can launch it
+    without any resource rewriting.  This avoids the custom PE-resource delta
+    that triggered Defender's whole-file machine-learning classification.
+    """
+    if not CLEAN_WINDOWED_BOOTLOADER.is_file():
+        raise RuntimeError(
+            f'Clean PyInstaller bootloader not found at {CLEAN_WINDOWED_BOOTLOADER}'
+        )
+    source_hash = compute_sha256(CLEAN_WINDOWED_BOOTLOADER)
+    if source_hash != CLEAN_WINDOWED_BOOTLOADER_SHA256:
+        raise RuntimeError(
+            'Clean PyInstaller bootloader failed its pinned SHA-256 check '
+            f'({source_hash})'
+        )
+    target = runtime_dir / 'aos.exe'
+    shutil.copy2(CLEAN_WINDOWED_BOOTLOADER, target)
+    if compute_sha256(target) != CLEAN_WINDOWED_BOOTLOADER_SHA256:
+        raise RuntimeError('Release aos.exe changed after copying the clean bootloader')
 
 
 def copy_tree(source: Path, destination: Path) -> None:
@@ -946,14 +984,37 @@ def build_pkg_only_artifact(stage_dir: Path, version: str) -> Path:
     return zip_directory(pkg_stage, artifact_path)
 
 
+def write_artifact_checksums(version: str, artifacts: list[Path]) -> Path:
+    """Write a deterministic checksum list for every published artifact."""
+    checksum_path = ARTIFACTS_ROOT / f'AoSRevival-{version}-SHA256SUMS.txt'
+    lines = [
+        f'{compute_sha256(path)}  {path.name}'
+        for path in sorted(artifacts, key=lambda item: item.name.lower())
+        if path is not None
+    ]
+    checksum_path.write_text('\n'.join(lines) + '\n', encoding='ascii')
+    return checksum_path
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Build legacy AoS Revival releases with aos.exe + aos.pkg')
     parser.add_argument('--version', required=True)
     return parser.parse_args()
 
 
+def validate_release_version(version: str) -> None:
+    if not SOURCE_VERSION_FILE.is_file():
+        raise RuntimeError(f'Source version marker not found at {SOURCE_VERSION_FILE}')
+    expected = SOURCE_VERSION_FILE.read_text(encoding='utf-8').strip()
+    if version.strip() != expected:
+        raise RuntimeError(
+            f'Build version {version!r} does not match source VERSION {expected!r}'
+        )
+
+
 def main() -> int:
     args = parse_args()
+    validate_release_version(args.version)
     ensure_directory(BUILD_ROOT)
     ensure_directory(ARTIFACTS_ROOT)
     ensure_directory(RELEASES_ROOT)
@@ -967,6 +1028,10 @@ def main() -> int:
         ARTIFACTS_ROOT / f'{release_name(args.version)}-full-solid.7z',
     )
     pkg_artifact = build_pkg_only_artifact(stage_dir, args.version)
+    checksum_artifact = write_artifact_checksums(
+        args.version,
+        [path for path in (full_artifact, solid_artifact, pkg_artifact) if path is not None],
+    )
 
     print(f'Built legacy runtime: {runtime_dir}')
     print(f'Built release stage: {stage_dir}')
@@ -974,6 +1039,7 @@ def main() -> int:
     if solid_artifact is not None:
         print(f'Built solid artifact: {solid_artifact}')
     print(f'Built pkg-only artifact: {pkg_artifact}')
+    print(f'Built checksum artifact: {checksum_artifact}')
     return 0
 
 

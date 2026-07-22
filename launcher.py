@@ -648,6 +648,8 @@ class Launcher(object):
         self._game_process = None
         self._game_started_at = None
         self._previous_emulator = None
+        self._update_check_started = False
+        self._update_in_progress = False
         self.debug_enabled = "+debug" in sys.argv
         self.legacy_name = emulator_value("UserName", "Player")
         if self.legacy_name.startswith("~"):
@@ -685,6 +687,8 @@ class Launcher(object):
         self.refresh_servers(quiet=True)
         if self.api.access_token:
             self._run_async("Checking account…", self.api.refresh_identity, self._identity_refreshed, quiet=True)
+        if getattr(sys, "frozen", False):
+            self.root.after(2000, self.check_for_updates)
 
     def _center(self):
         self.root.update_idletasks()
@@ -918,6 +922,112 @@ class Launcher(object):
         thread = threading.Thread(target=worker, name="aos-revival-request")
         thread.daemon = True
         thread.start()
+
+    def check_for_updates(self):
+        """Check the canonical GitHub release without blocking the Tk thread."""
+        if self._update_check_started or self._update_in_progress:
+            return
+        self._update_check_started = True
+
+        def worker():
+            try:
+                import revival_updater
+                outcome = (True, revival_updater.find_update())
+            except Exception as error:
+                outcome = (False, error)
+            self._post_to_ui(lambda value=outcome: self._update_check_finished(value))
+
+        thread = threading.Thread(target=worker, name="aos-revival-update-check")
+        thread.daemon = True
+        thread.start()
+
+    def _update_check_finished(self, outcome):
+        success, value = outcome
+        if not success:
+            append_launcher_log(
+                "Automatic update check failed: %s" % display_text(value)
+            )
+            return
+        if value is None or self._game_process is not None:
+            return
+        version = display_text(value.get("version") or "new")
+        accepted = messagebox.askyesno(
+            "AoS Revival update",
+            "AoS Revival %s is available.\n\n"
+            "Download and verify the full client and bundled server now?"
+            % version,
+            parent=self.root,
+        )
+        if accepted:
+            self._download_verified_update(value)
+
+    def _download_verified_update(self, asset):
+        """Prepare one update in isolation, then hand off after launcher exit."""
+        if self._update_in_progress:
+            return
+        self._update_in_progress = True
+        self._set_busy(True)
+        for sequence in (
+            "<F5>", "<Return>", "<Control-l>", "<Control-i>",
+            "<Control-g>", "<Alt-m>", "<Escape>",
+        ):
+            self.root.unbind(sequence)
+        self.set_status("Downloading the verified AoS Revival update...")
+        progress_state = [-1]
+
+        def progress(received, total):
+            percent = int((received * 100) // max(1, total))
+            if percent == progress_state[0]:
+                return
+            progress_state[0] = percent
+            self._post_to_ui(
+                lambda value=percent: self.set_status(
+                    "Downloading verified update... %d%%" % value
+                )
+            )
+
+        def worker():
+            try:
+                import revival_updater
+                prepared = revival_updater.prepare_update(asset, progress=progress)
+                outcome = (True, prepared)
+            except Exception as error:
+                outcome = (False, error)
+            self._post_to_ui(lambda value=outcome: self._update_download_finished(value))
+
+        thread = threading.Thread(target=worker, name="aos-revival-update-download")
+        thread.daemon = True
+        thread.start()
+
+    def _update_download_finished(self, outcome):
+        success, value = outcome
+        if not success:
+            self._update_in_progress = False
+            self._set_busy(False)
+            self._bind_shortcuts()
+            message = display_text(value) or "The verified update could not be prepared."
+            append_launcher_log("Automatic update failed: %s" % message)
+            self.set_status(message, error=True)
+            messagebox.showerror("AoS Revival update", message, parent=self.root)
+            return
+        try:
+            import revival_updater
+            revival_updater.launch_prepared_update(value)
+        except Exception as error:
+            self._update_in_progress = False
+            self._set_busy(False)
+            self._bind_shortcuts()
+            message = display_text(error) or "The update installer could not start."
+            append_launcher_log("Automatic update handoff failed: %s" % message)
+            self.set_status(message, error=True)
+            messagebox.showerror("AoS Revival update", message, parent=self.root)
+            return
+        append_launcher_log(
+            "Verified update %s prepared; handing off to the installer."
+            % display_text(value.get("version") or "unknown")
+        )
+        self.set_status("Update verified. Restarting AoS Revival...")
+        self.root.after(100, self.close)
 
     def _render_account(self):
         account = self.api.account

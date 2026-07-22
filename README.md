@@ -10,6 +10,7 @@ This repo is set up to:
 - talk to the aosplay.net master service for accounts, the server list, and profiles
 - host local Play / Tutorial / UGC matches via the bundled BattleSpades server
 - avoid shipping `steam_emu`
+- securely update full releases from the official GitHub repository
 
 ## Current Status
 
@@ -124,6 +125,8 @@ The builder writes:
 - `build/releases/AoSRevival-<version>-win32/`
 - `build/artifacts/AoSRevival-<version>-win32-full.zip`
 - `build/artifacts/AoSRevival-<version>-pkg-only.zip`
+- `build/artifacts/AoSRevival-<version>-win32-full-solid.7z`
+- `build/artifacts/AoSRevival-<version>-SHA256SUMS.txt`
 
 The staged release contains:
 
@@ -222,7 +225,14 @@ $env:AOS_SERVER_LIST_URL = "https://example.com/serverlist"
 - `aos.pkg` contains the Python-side game code.
 - Small client code updates can often ship as a `pkg-only` artifact.
 - The release builder bootstraps a Python 2-compatible PyInstaller 3.5 toolchain automatically under `build/py2toolchain/`.
-- The generated executables use the original AoS icon bundle from `png/ui/aos16.png`, `aos32.png`, `aos64.png`, and `aos128.png`.
+- `aos.exe` is restored from the pristine, SHA-256-pinned PyInstaller 3.5
+  windowed bootloader after packaging. The launcher icon is loaded from the
+  external `game.ico`, avoiding PE resource rewriting that can trigger
+  reputation-based antivirus false positives.
+- The launcher checks the official GitHub releases endpoint for a newer full
+  ZIP. It accepts only the canonical filename, GitHub HTTPS hosts, an exact
+  size, and GitHub's SHA-256 digest, then verifies every extracted file against
+  `build_manifest.json` before applying the update.
 
 ## Related Docs
 
