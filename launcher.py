@@ -4,6 +4,7 @@ from __future__ import print_function, unicode_literals
 
 import codecs
 import ctypes
+import json
 import os
 import re
 import subprocess
@@ -468,6 +469,52 @@ def save_emulator_config(nickname, language):
             if os.path.exists(EMU_CONFIG_PATH):
                 os.remove(EMU_CONFIG_PATH)
             os.rename(temporary, EMU_CONFIG_PATH)
+    except Exception:
+        try:
+            if os.path.exists(temporary):
+                os.remove(temporary)
+        except (IOError, OSError):
+            pass
+        raise
+
+
+def save_user_config(username, language):
+    """Write config_user.json, the game's in-game persona source.
+
+    The frozen client reads its display name and language from config_user.json
+    via shared.steam, NOT from steam_emu.ini, so the launcher must refresh it
+    with the signed-in account (or guest) name before each launch. Without this
+    the game shows whatever stale/legacy name config_user.json already held.
+    """
+    path = os.path.join(APP_DIR, "config_user.json")
+    payload = json.dumps(
+        {"username": display_text(username), "language": display_text(language)},
+        ensure_ascii=False,
+        indent=4,
+    )
+    temporary = path + ".tmp"
+    try:
+        with codecs.open(temporary, "w", encoding="utf-8") as stream:
+            stream.write(payload)
+            stream.flush()
+            try:
+                os.fsync(stream.fileno())
+            except (AttributeError, OSError):
+                pass
+        if os.name == "nt":
+            replace_existing = 0x1
+            write_through = 0x8
+            moved = ctypes.windll.kernel32.MoveFileExW(
+                display_text(temporary),
+                display_text(path),
+                replace_existing | write_through,
+            )
+            if not moved:
+                raise ctypes.WinError()
+        else:
+            if os.path.exists(path):
+                os.remove(path)
+            os.rename(temporary, path)
     except Exception:
         try:
             if os.path.exists(temporary):
@@ -1134,6 +1181,18 @@ class Launcher(object):
                 parent=self.root,
             )
             return
+
+        # The pure-Python steam module reads the in-game name from
+        # config_user.json, not steam_emu.ini, so refresh it with the same
+        # signed-in (or guest) name we are launching under.
+        try:
+            save_user_config(wire_name, self.language)
+        except (IOError, OSError, ValueError) as error:
+            append_launcher_log(
+                "Could not write config_user.json (in-game name may be stale): %s"
+                % display_text(error),
+                sys.exc_info(),
+            )
 
         arguments = self._game_arguments(identifier)
         command = game_command(arguments)

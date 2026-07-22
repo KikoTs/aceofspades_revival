@@ -12,6 +12,7 @@ from shared.constants_prefabs import A3056, A3037
 from shared.hud_constants import LIST_PANEL_SPACING, MATCH_SETTINGS_ROW_HEIGHT, MATCH_SETTINGS_ROW_SPACING
 from aoslib.media import HUD_AUDIO_ZONE
 from shared.constants_gamemode import A2448
+import local_host
 PRIVACY_TYPES_LIST = [
  strings.INVITE, strings.FRIENDS, strings.OPEN]
 
@@ -205,6 +206,11 @@ class MatchSettingsPanel(LobbyPanelBase):
     def cancel_game(self):
         self.on_cancel_game(silent=True, only_if_started=True)
 
+    def on_local_setting_changed(self, value=None):
+        # Changing a local host setting cancels any in-progress start so the
+        # bundled server is respawned with the new bots/difficulty/port.
+        self.cancel_game()
+
     def populate_match_settings_list(self):
         self.list_panel.rows = []
         if self.enable_privacy_type:
@@ -218,6 +224,25 @@ class MatchSettingsPanel(LobbyPanelBase):
         if self.enable_match_length:
             match_length = MatchSettingsSliderListItem(strings.MATCH_LENGTH, 'MATCH_LENGTH', self.lobby_id, A2669, on_value_changed_callback=self.on_match_length_changed, media=self.manager.media)
             self.list_panel.rows.append(match_length)
+        if self.enable_max_players:
+            # Revival: bundled local-server host controls (bot count/difficulty
+            # and the server port). Each slider persists its value to the lobby
+            # data by key, which local_host reads when spawning the server.
+            for local_key, local_default in (('BOT_COUNT', '0'), ('BOT_DIFFICULTY', 'mixed'), ('SERVER_PORT', str(local_host.DEFAULT_SERVER_PORT))):
+                if SteamGetLobbyData(self.lobby_id, local_key) == '':
+                    SteamSetLobbyData(local_key, local_default)
+            bots = MatchSettingsSliderListItem('Bots', 'BOT_COUNT', self.lobby_id, local_host.BOT_COUNT_PRESETS, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)
+            self.list_panel.rows.append(bots)
+            bot_difficulty = MatchSettingsSliderListItem('Bot Difficulty', 'BOT_DIFFICULTY', self.lobby_id, local_host.BOT_DIFFICULTIES, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)
+            self.list_panel.rows.append(bot_difficulty)
+            try:
+                port_row = local_host.create_server_port_row(self.manager, self.lobby_id, callback=self.on_local_setting_changed)
+                self.list_panel.rows.append(port_row)
+            except Exception:
+                # The validated port editor is best-effort; a bad row must never
+                # break the whole settings list. Missing port falls back to the
+                # default (local_host auto-allocates a free port anyway).
+                pass
         if self.enable_map_rotation:
             self.add_map_rotation_row()
         if self.enable_game_rules:
