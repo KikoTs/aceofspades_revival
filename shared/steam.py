@@ -1147,6 +1147,28 @@ def ugc_version():
     return UGC_VERSION
 
 
+# Base of the individual SteamID64 range (0x0110000100000000).
+_STEAMID64_INDIVIDUAL_BASE = 76561197960265728
+
+
+def _offline_steam_id(username):
+    """Return a stable non-zero individual SteamID64 for offline play.
+
+    Offline mode has no Steam account, but lobby ownership and membership are
+    keyed on SteamID. A zero id makes the host fail to own or join its own
+    lobby, so create-match silently does nothing (the lobby-created callback
+    opens the host submenu only for a valid owner). Derive a deterministic
+    per-username account id so the same player is stable across launches.
+    """
+    text = username or u"Player"
+    if not isinstance(text, bytes):
+        text = text.encode("utf-8")
+    account_id = binascii.crc32(text) & 0xFFFFFFFF
+    if account_id == 0:
+        account_id = 1
+    return _STEAMID64_INDIVIDUAL_BASE + account_id
+
+
 def SteamInitializeClient():
     # Steam mode has priority whenever steam_api.dll exists.  The JSON fallback
     # is activated only when the DLL is physically absent.
@@ -1160,11 +1182,22 @@ def SteamInitializeClient():
         _state["language"] = (
             _backend.get_current_game_language() or u"english"
         )
-    elif _offline_mode():
-        _apply_offline_user_config()
-        _debug("steam_api.dll absent; local config mode enabled")
     else:
-        _debug("steam_api.dll exists but SteamAPI_Init failed; JSON fallback disabled")
+        # No working Steam backend (DLL absent, or present but Init failed).
+        # Use the local config_user.json identity so the squad/lobby menus work.
+        _apply_offline_user_config()
+        if _offline_mode():
+            _debug("steam_api.dll absent; local config mode enabled")
+        else:
+            _debug("steam_api.dll present but SteamAPI_Init failed; using local config")
+    if not _state["steam_id"]:
+        # Without a real Steam identity (offline, or a DLL present but Init
+        # failed), assign a stable non-zero SteamID so the squad/lobby menus
+        # recognize the local player as their own lobby's owner and member.
+        # Otherwise create-match's SteamCreateLobby callback opens no submenu.
+        _state["steam_id"] = _offline_steam_id(
+            _state["persona_name"] or _load_user_config()["username"]
+        )
     with _lock:
         _state["client_initialized"] = True
     return True

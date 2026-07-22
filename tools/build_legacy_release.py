@@ -868,6 +868,11 @@ def stage_release(runtime_dir: Path, version: str) -> Path:
     copy_package_extensions(ROOT / 'shared', stage_dir)
     copy_assets(stage_dir)
     copy_extra_runtime_files(stage_dir)
+    # The launcher window sets its icon via root.iconbitmap(APP_DIR/game.ico),
+    # so ship the generated .ico under that name.
+    icon_source = Path(resolve_icon_source())
+    if icon_source.exists():
+        shutil.copy2(icon_source, stage_dir / 'game.ico')
     copy_server_bundle(stage_dir)
     ensure_debug_pkg(stage_dir)
     write_stage_metadata(stage_dir, version)
