@@ -1,4 +1,5 @@
 from tool import Tool
+from . import TOOL_IMAGES
 from aoslib.draw import draw_cube
 from aoslib.kv6 import set_kv6_default_color
 from aoslib.models import *

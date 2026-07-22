@@ -102,15 +102,12 @@ ASSET_DIRECTORIES = [
 EXTRA_RUNTIME_FILES = [
     "ALURE32.dll",
     "api_interfaces_32.txt",
-    "codex.dll",
     "config.txt",
     "config_user.json",
     "enet.pyd",
-    "GameOverlayRenderer.dll",
     "libsndfile-1.dll",
     "list.pnq",
     "steam_appid.txt",
-    "steamclient.dll",
 ]
 
 # Revival client modules and the Tkinter launcher UI are imported lazily
@@ -145,6 +142,15 @@ REVIVAL_HIDDEN_IMPORTS = [
 BATTLESPADES_REPO = ROOT.parent / "BattleSpades"
 BATTLESPADES_BUNDLE = BATTLESPADES_REPO / "dist" / "BattleSpades"
 BATTLESPADES_SERVER_DATA = ["maps", "prefabs", "plugins", "client_patches"]
+
+# BattleSpades does not import NumPy, but builds made from a broad Python
+# environment can still collect it (and its OpenBLAS runtime).  Do not ship
+# that unused 27 MB dependency in the client release.
+SERVER_RUNTIME_EXCLUDES = [
+    "_internal/numpy",
+    "_internal/numpy.libs",
+    "_internal/numpy-2.3.0.dist-info",
+]
 
 PKG_RESOURCES_SHIM = '''from __future__ import absolute_import
 
@@ -672,6 +678,7 @@ def build_legacy_runtime() -> Path:
     command = [
         str(PY2_PYTHON),
         str(PYINSTALLER_ENTRY),
+        '--clean',
         '-y',
         '--distpath',
         str(dist_root),
@@ -764,6 +771,11 @@ def copy_server_bundle(stage_dir: Path) -> None:
     if destination.exists():
         shutil.rmtree(destination)
     shutil.copytree(source, destination)
+
+    for relative_path in SERVER_RUNTIME_EXCLUDES:
+        unused_path = destination / relative_path
+        if unused_path.is_dir():
+            shutil.rmtree(unused_path)
 
     # The bare PyInstaller dist is code only. local_host runs the server with
     # cwd=<server>, and the tutorial/match server loads maps/Training.vxl (plus
@@ -891,6 +903,38 @@ def zip_directory(source_dir: Path, zip_path: Path) -> Path:
     return zip_path
 
 
+def resolve_7zip() -> Path | None:
+    """Return an available 7-Zip executable for optional solid archives."""
+    configured = os.environ.get('AOS_7Z')
+    candidates = [
+        Path(configured) if configured else None,
+        Path(shutil.which('7z')) if shutil.which('7z') else None,
+        Path(os.environ.get('ProgramFiles', '')) / '7-Zip' / '7z.exe',
+        Path(os.environ.get('ProgramFiles(x86)', '')) / '7-Zip' / '7z.exe',
+        Path(os.environ.get('ProgramFiles(x86)', '')) / 'FreeArc' / 'bin' / '7z.exe',
+    ]
+    return next((path for path in candidates if path and path.is_file()), None)
+
+
+def build_solid_artifact(source_dir: Path, archive_path: Path) -> Path | None:
+    """Build a lossless solid LZMA2 archive when 7-Zip is available."""
+    seven_zip = resolve_7zip()
+    if seven_zip is None:
+        print('7-Zip not found; skipping optional solid artifact.')
+        return None
+    if archive_path.exists():
+        archive_path.unlink()
+    ensure_directory(archive_path.parent)
+    subprocess.run(
+        [
+            str(seven_zip), 'a', '-t7z', '-mx=9', '-m0=lzma2', '-md=256m',
+            '-ms=on', '-mmt=on', str(archive_path), str(source_dir / '*'),
+        ],
+        check=True,
+    )
+    return archive_path
+
+
 def build_pkg_only_artifact(stage_dir: Path, version: str) -> Path:
     pkg_stage = BUILD_ROOT / 'pkg_only' / version
     if pkg_stage.exists():
@@ -918,11 +962,17 @@ def main() -> int:
     runtime_dir = build_legacy_runtime()
     stage_dir = stage_release(runtime_dir, args.version)
     full_artifact = zip_directory(stage_dir, ARTIFACTS_ROOT / f'{release_name(args.version)}-full.zip')
+    solid_artifact = build_solid_artifact(
+        stage_dir,
+        ARTIFACTS_ROOT / f'{release_name(args.version)}-full-solid.7z',
+    )
     pkg_artifact = build_pkg_only_artifact(stage_dir, args.version)
 
     print(f'Built legacy runtime: {runtime_dir}')
     print(f'Built release stage: {stage_dir}')
     print(f'Built full artifact: {full_artifact}')
+    if solid_artifact is not None:
+        print(f'Built solid artifact: {solid_artifact}')
     print(f'Built pkg-only artifact: {pkg_artifact}')
     return 0
 
