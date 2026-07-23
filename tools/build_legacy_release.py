@@ -129,6 +129,7 @@ REVIVAL_HIDDEN_IMPORTS = [
     "revival_crypto",
     "revival_store",
     "revival_updater",
+    "aoslib.jump_smoothing_patch",
     "aoslib.parachute_key_patch",
     "retail_compat",
     "session_transition_patch",

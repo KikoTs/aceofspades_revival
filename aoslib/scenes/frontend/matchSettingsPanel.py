@@ -13,8 +13,19 @@ from shared.hud_constants import LIST_PANEL_SPACING, MATCH_SETTINGS_ROW_HEIGHT, 
 from aoslib.media import HUD_AUDIO_ZONE
 from shared.constants_gamemode import A2448
 import local_host
+from aoslib.scenes.main import matchSettings as match_settings_module
+
+
 PRIVACY_TYPES_LIST = [
  strings.INVITE, strings.FRIENDS, strings.OPEN]
+
+# Keep the stock Defaults button valid for the three Revival-only rows.
+match_settings_module.DEFAULT_MATCH_SETTINGS.update({
+    'BOT_COUNT': '0',
+    'BOT_DIFFICULTY': 'mixed',
+    'SERVER_PORT': str(local_host.DEFAULT_SERVER_PORT),
+})
+
 
 class MatchSettingsPanel(LobbyPanelBase):
 
@@ -106,6 +117,21 @@ class MatchSettingsPanel(LobbyPanelBase):
             return
         else:
             return
+
+    def on_mouse_scroll(self, x, y, dx, dy):
+        """Scroll the visible settings rows, including over the scroll bar."""
+        if not self.enabled or not self.visible or not self.visible_content:
+            return
+        if not self.list_panel.get_mouse_collides(
+                x, y, include_scrollbar=True):
+            return
+        scrollbar = self.list_panel.scrollbar
+        if scrollbar is None or dy == 0:
+            return
+        delta = int(dy)
+        if delta == 0:
+            delta = 1 if dy > 0 else -1
+        scrollbar.set_scroll(int(scrollbar.scroll_pos) - delta)
 
     def open_edit_map_rotation_menu(self):
         self.cancel_game()
@@ -224,31 +250,33 @@ class MatchSettingsPanel(LobbyPanelBase):
         if self.enable_match_length:
             match_length = MatchSettingsSliderListItem(strings.MATCH_LENGTH, 'MATCH_LENGTH', self.lobby_id, A2669, on_value_changed_callback=self.on_match_length_changed, media=self.manager.media)
             self.list_panel.rows.append(match_length)
-        if self.enable_max_players:
-            # Revival: bundled local-server host controls (bot count/difficulty
-            # and the server port). Each slider persists its value to the lobby
-            # data by key, which local_host reads when spawning the server.
-            for local_key, local_default in (('BOT_COUNT', '0'), ('BOT_DIFFICULTY', 'mixed'), ('SERVER_PORT', str(local_host.DEFAULT_SERVER_PORT))):
-                if SteamGetLobbyData(self.lobby_id, local_key) == '':
-                    SteamSetLobbyData(local_key, local_default)
-            bots = MatchSettingsSliderListItem('Bots', 'BOT_COUNT', self.lobby_id, local_host.BOT_COUNT_PRESETS, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)
-            self.list_panel.rows.append(bots)
-            bot_difficulty = MatchSettingsSliderListItem('Bot Difficulty', 'BOT_DIFFICULTY', self.lobby_id, local_host.BOT_DIFFICULTIES, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)
-            self.list_panel.rows.append(bot_difficulty)
-            try:
-                port_row = local_host.create_server_port_row(self.manager, self.lobby_id, callback=self.on_local_setting_changed)
-                self.list_panel.rows.append(port_row)
-            except Exception:
-                # The validated port editor is best-effort; a bad row must never
-                # break the whole settings list. Missing port falls back to the
-                # default (local_host auto-allocates a free port anyway).
-                pass
         if self.enable_map_rotation:
             self.add_map_rotation_row()
         if self.enable_game_rules:
             default_text = get_display_name('GAME_RULES', self.lobby_id)
             rules = MatchSettingsMenuListItem(strings.GAME_RULES, 'GAME_RULES', self.lobby_id, self.open_edit_game_rules_menu, default_text)
             self.list_panel.rows.append(rules)
+            # Preserve the stock Map and Game Rules rows at their original
+            # positions. Revival-only host controls follow them and appear
+            # only in a normal match lobby, never in UGC authoring screens.
+            if SteamGetLobbyData(self.lobby_id, 'LobbyType') == str(A2664):
+                for local_key, local_default in (
+                        ('BOT_COUNT', '0'),
+                        ('BOT_DIFFICULTY', 'mixed'),
+                        ('SERVER_PORT', str(local_host.DEFAULT_SERVER_PORT))):
+                    if SteamGetLobbyData(self.lobby_id, local_key) == '':
+                        SteamSetLobbyData(local_key, local_default)
+                bots = MatchSettingsSliderListItem('Bots', 'BOT_COUNT', self.lobby_id, local_host.BOT_COUNT_PRESETS, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)
+                self.list_panel.rows.append(bots)
+                difficulty = MatchSettingsSliderListItem('Bot Difficulty', 'BOT_DIFFICULTY', self.lobby_id, local_host.BOT_DIFFICULTIES, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)
+                self.list_panel.rows.append(difficulty)
+                try:
+                    port = local_host.create_server_port_row(self.manager, self.lobby_id, callback=self.on_local_setting_changed)
+                    self.list_panel.rows.append(port)
+                except Exception:
+                    # Port editing is best-effort; local_host still allocates
+                    # its safe default if the legacy UI control cannot load.
+                    pass
         if self.enable_prefab_set:
             default_text = self.get_prefab_set_name()
             prefab_set = MatchSettingsMenuListItem(strings.PREFAB_SET, 'PREFAB_SET', self.lobby_id, self.open_prefab_set_menu, default_text)
