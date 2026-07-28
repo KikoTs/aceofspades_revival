@@ -14,6 +14,7 @@ from aoslib import strings
 import copy
 from aoslib.media import HUD_AUDIO_ZONE
 from aoslib.common import draw_image_scaled
+from revival_scroll import consume_wheel_steps
 LINE_PAD = 8
 ITEM_COLOR = (27, 224, 66)
 CHECKBOX_COLOR = (
@@ -1631,10 +1632,9 @@ class VerticalScrollBar(ScrollBar):
         if not self.enabled:
             return
         if self.focus:
-            if scroll_y > 0:
-                self.on_dec()
-            else:
-                self.on_inc()
+            steps = consume_wheel_steps(self, scroll_y)
+            if steps:
+                self.set_scroll(int(self.scroll_pos) - steps)
 
 
 class HorizontalScrollBar(ScrollBar):

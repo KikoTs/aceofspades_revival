@@ -24,6 +24,8 @@ import traceback
 import unicodedata
 import uuid
 
+from revival_paths import local_appdata_directory, unicode_popen
+
 try:
     WindowsError
 except NameError:  # pragma: no cover - Python 3 compatibility
@@ -59,8 +61,8 @@ class LocalHostError(Exception):
 def _local_host_log_path():
     """Return the per-user log used by both readiness and UI callbacks."""
 
-    base = os.environ.get("LOCALAPPDATA") or tempfile.gettempdir()
-    directory = os.path.join(base, "AoS Revival", "logs")
+    base = local_appdata_directory(fallback=tempfile.gettempdir())
+    directory = os.path.join(base, u"AoS Revival", u"logs")
     if not os.path.isdir(directory):
         try:
             os.makedirs(directory)
@@ -499,8 +501,8 @@ def create_session_config(settings, parent=None, kind="match"):
     """Atomically create one private temporary config and return its directory."""
 
     if parent is None:
-        local = os.environ.get("LOCALAPPDATA") or tempfile.gettempdir()
-        parent = os.path.join(local, "AoSRevival", "local-servers")
+        local = local_appdata_directory(fallback=tempfile.gettempdir())
+        parent = os.path.join(local, u"AoSRevival", u"local-servers")
     if not os.path.isdir(parent):
         os.makedirs(parent)
     session_dir = os.path.join(parent, "session-%s" % uuid.uuid4().hex)
@@ -844,7 +846,7 @@ def spawn_hidden(command, cwd, session_dir, port, kind="match",
         creationflags |= getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
         creationflags |= getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)
     try:
-        process = subprocess.Popen(
+        process = unicode_popen(
             command,
             cwd=cwd,
             stdin=child_stdin,

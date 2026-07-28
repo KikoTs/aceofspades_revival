@@ -4,7 +4,7 @@ from aoslib.images import global_images
 from aoslib.text import title_font
 from pyglet.window import key
 from pyglet import gl
-from shared.constants import MENU_FONT_COLOR, A2437, A2445, A2442, CLASS_ITEMS, CLASS_CLASSIC_SOLDIER, CLASS_PRIMARY_WEAPONS, CLASS_SECONDARY_WEAPONS, CLASS_EQUIPMENT, CLASS_MELEE, CLASS_GANGSTER_VIP_1, CLASS_GANGSTER_VIP_2
+from shared.constants import MENU_FONT_COLOR, A2437, A2445, A2442, TEAM_SPECTATOR, CLASS_ITEMS, CLASS_CLASSIC_SOLDIER, CLASS_PRIMARY_WEAPONS, CLASS_SECONDARY_WEAPONS, CLASS_EQUIPMENT, CLASS_MELEE, CLASS_GANGSTER_VIP_1, CLASS_GANGSTER_VIP_2
 from aoslib import strings
 from aoslib.media import HUD_AUDIO_ZONE
 from aoslib.hud.hud import ViewGameStats
@@ -79,8 +79,14 @@ class EscapeMenu(MenuScene):
             self.constructs_button.visible = False
         else:
             in_ugc_mode = game_scene.is_in_ugc_mode()
+            is_spectator = game_scene.player.team.id == TEAM_SPECTATOR
             self.change_class_button.enabled = not in_ugc_mode and game_scene.class_selection_has_choices()
-            self.change_team_button.enabled = not in_ugc_mode and game_scene.team_selection_has_choices()
+            # A spectator has no playable current team, so the compiled
+            # team_selection_has_choices helper can report false even though
+            # ChangeTeam has valid team-one/team-two buttons.
+            self.change_team_button.enabled = not in_ugc_mode and (
+                is_spectator or game_scene.team_selection_has_choices()
+            )
             self.constructs_button.enabled = in_ugc_mode
             self.game_data_button.enabled = in_ugc_mode
             self.change_class_button.visible = not in_ugc_mode

@@ -201,6 +201,7 @@ class LeaderboardListPanel(ListPanelBase):
 
     def set_list_items_position_on_scroll(self, x, y, width):
         y = y - self.row_height - self.top_padding
+        y += self.min_index * (self.row_height + self.line_spacing)
         for row_index, row in enumerate(self.rows):
             if row_index < self.min_index or row_index >= self.max_index - 1:
                 if row.enable_on_scroll:

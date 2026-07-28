@@ -3,6 +3,11 @@ from shared.steam import SteamGetPersonaName
 from shared import constants
 from shared.constants import REGION_US_WEST, REGION_US_EAST, REGION_EUROPE, REGION_AUSTRALIA
 from aoslib import update_resolutions
+from display_config import (
+    DISPLAY_SETTING_NAMES,
+    sanitize_display_config,
+    write_json_file,
+)
 A2265 = True
 MAIN_DEFAULT = {'master_volume': 1.0, 
    'music_volume': 1.0, 
@@ -122,6 +127,7 @@ class Configuration(object):
     def set_dict(self, data, from_restore=False):
         cfg = copy.deepcopy(DEFAULT_CONFIG)
         cfg.update(data)
+        cfg, ignored_changes = sanitize_display_config(cfg)
         for name, value in cfg.iteritems():
             self.set(name, value, from_restore)
 
@@ -136,48 +142,195 @@ class Configuration(object):
         return data
 
     def restore(self):
-        self.set_dict(self.old_config, from_restore=True)
-        self.changed = False
-
-    def save(self, set_old_config=True):
-        if set_old_config:
-            self.old_config = self.get_dict()
-        data = self.get_dict()
+        cfg = copy.deepcopy(DEFAULT_CONFIG)
+        cfg.update(self.old_config)
+        cfg, ignored_changes = sanitize_display_config(cfg)
+        display_settings = {}
+        for name in DISPLAY_SETTING_NAMES:
+            display_settings[name] = cfg.pop(name)
+        for name, value in cfg.iteritems():
+            self.set(name, value, from_restore=True)
+        restored = self._apply_display_settings(
+            display_settings,
+            from_restore=True,
+        )
         self.changed = False
         try:
-            with open(self.filename, 'wb') as f:
-                json.dump(data, f, indent=4)
-        except IOError:
+            update_resolutions()
+        except Exception:
             pass
+        return restored
+
+    def save(self, set_old_config=True):
+        data = self.get_dict()
+        try:
+            write_json_file(self.filename, data)
+        except (IOError, OSError, TypeError, ValueError):
+            return False
+        if set_old_config:
+            self.old_config = copy.deepcopy(data)
+        self.changed = False
+        return True
+
+    def _display_settings(self):
+        settings = {}
+        for name in DISPLAY_SETTING_NAMES:
+            settings[name] = getattr(self, name)
+        return settings
+
+    def _apply_display_settings(self, settings, from_restore=False):
+        previous = self._display_settings()
+        target = previous.copy()
+        target.update(settings)
+        target, ignored_changes = sanitize_display_config(target)
+        for name in DISPLAY_SETTING_NAMES:
+            setattr(self, name, target[name])
+        self.changed = True
+
+        if not self.manager:
+            return True
+
+        previous_width = (
+            previous['width']
+            if previous['fullscreen']
+            else previous['window_width']
+        )
+        previous_height = (
+            previous['height']
+            if previous['fullscreen']
+            else previous['window_height']
+        )
+        target_width = (
+            target['width']
+            if target['fullscreen']
+            else target['window_width']
+        )
+        target_height = (
+            target['height']
+            if target['fullscreen']
+            else target['window_height']
+        )
+        needs_transition = (
+            previous['fullscreen'] != target['fullscreen']
+            or previous_width != target_width
+            or previous_height != target_height
+        )
+        window = self.manager.window
+        try:
+            if needs_transition:
+                window.setting_fullscreen = True
+                if target['fullscreen']:
+                    if not previous['fullscreen']:
+                        try:
+                            self.manager.save_window_position()
+                        except Exception:
+                            pass
+                    window.set_fullscreen(
+                        True,
+                        width=target_width,
+                        height=target_height,
+                    )
+                elif previous['fullscreen']:
+                    window.set_fullscreen(
+                        False,
+                        width=target_width,
+                        height=target_height,
+                    )
+                else:
+                    window.set_size(
+                        width=target_width,
+                        height=target_height,
+                    )
+        except Exception:
+            for name in DISPLAY_SETTING_NAMES:
+                setattr(self, name, previous[name])
+            try:
+                if previous['fullscreen']:
+                    window.set_fullscreen(
+                        True,
+                        width=previous_width,
+                        height=previous_height,
+                    )
+                elif target['fullscreen']:
+                    window.set_fullscreen(
+                        False,
+                        width=previous_width,
+                        height=previous_height,
+                    )
+                else:
+                    window.set_size(
+                        width=previous_width,
+                        height=previous_height,
+                    )
+            except Exception:
+                pass
+            return False
+        finally:
+            window.setting_fullscreen = False
+
+        if not from_restore:
+            try:
+                update_resolutions()
+            except Exception:
+                pass
+        return True
+
+    def apply_display_mode(
+        self,
+        fullscreen,
+        width,
+        height,
+        resolution=None,
+        from_restore=False,
+    ):
+        settings = self._display_settings()
+        settings['fullscreen'] = bool(fullscreen)
+        if settings['fullscreen']:
+            settings['width'] = width
+            settings['height'] = height
+        else:
+            settings['window_width'] = width
+            settings['window_height'] = height
+        if resolution is not None:
+            settings['resolution'] = resolution
+        return self._apply_display_settings(settings, from_restore)
 
     def set(self, name, value, from_restore=False):
+        if self.manager and name == 'fullscreen':
+            if value:
+                width = self.width
+                height = self.height
+            else:
+                width = self.window_width
+                height = self.window_height
+            return self.apply_display_mode(
+                value,
+                width,
+                height,
+                from_restore=from_restore,
+            )
+        if self.manager and name in (
+            'width',
+            'height',
+            'window_width',
+            'window_height',
+        ):
+            settings = self._display_settings()
+            settings[name] = value
+            active = (
+                self.fullscreen and name in ('width', 'height')
+                or not self.fullscreen
+                and name in ('window_width', 'window_height')
+            )
+            if active:
+                return self._apply_display_settings(settings, from_restore)
         self.changed = True
         setattr(self, name, value)
         if self.manager:
-            if name == 'fullscreen':
-                self.manager.window.setting_fullscreen = True
-                if self.fullscreen:
-                    self.manager.save_window_position()
-                    self.manager.window.set_fullscreen(True, width=self.width, height=self.height)
-                else:
-                    self.manager.window.set_fullscreen(False, width=self.window_width, height=self.window_height)
-                if not from_restore:
-                    update_resolutions()
-            elif name == 'vsync':
+            if name == 'vsync':
                 self.manager.window.set_vsync(self.vsync)
             elif name == 'master_volume':
                 self.manager.media.set_main_volume(self.master_volume)
             elif name == 'music_volume':
                 self.manager.media.set_music_volume(self.music_volume)
-            elif name == 'width':
-                if self.fullscreen:
-                    self.manager.window.setting_fullscreen = True
-                    self.manager.window.set_fullscreen(True, width=self.width, height=self.height)
-                if not from_restore:
-                    update_resolutions()
-            elif name == 'window_width' or name == 'window_height':
-                if not self.fullscreen:
-                    self.manager.window.set_size(width=self.window_width, height=self.window_height)
-                if not from_restore:
-                    update_resolutions()
         return True

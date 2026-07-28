@@ -13,6 +13,7 @@ from shared.hud_constants import LIST_PANEL_SPACING, MATCH_SETTINGS_ROW_HEIGHT, 
 from aoslib.media import HUD_AUDIO_ZONE
 from shared.constants_gamemode import A2448
 import local_host
+from revival_scroll import consume_wheel_steps
 from aoslib.scenes.main import matchSettings as match_settings_module
 
 
@@ -128,10 +129,9 @@ class MatchSettingsPanel(LobbyPanelBase):
         scrollbar = self.list_panel.scrollbar
         if scrollbar is None or dy == 0:
             return
-        delta = int(dy)
-        if delta == 0:
-            delta = 1 if dy > 0 else -1
-        scrollbar.set_scroll(int(scrollbar.scroll_pos) - delta)
+        steps = consume_wheel_steps(self, dy)
+        if steps:
+            scrollbar.set_scroll(int(scrollbar.scroll_pos) - steps)
 
     def open_edit_map_rotation_menu(self):
         self.cancel_game()

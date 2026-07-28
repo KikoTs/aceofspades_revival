@@ -2,6 +2,12 @@
 import os, sys, subprocess
 
 from retail_compat import install_literal_eval_guard
+from revival_paths import (
+    current_executable_path,
+    install_unicode_getcwd,
+    unicode_popen,
+    unicode_path,
+)
 
 '''
 # No longer necessary as the public build has no console
@@ -20,13 +26,14 @@ if not __debug__:
 print 'Starting Ace of Spades...'
 print 'Debug: %s' % __debug__
 PROGRESSBAR_ICON_BASE = 0x50
+install_unicode_getcwd()
 if getattr(sys, 'frozen', False):
-    application_path = os.path.dirname(os.path.abspath(sys.executable))
+    application_path = os.path.dirname(current_executable_path(sys.executable))
 elif __file__:
-    application_path = os.path.dirname(os.path.abspath(__file__))
+    application_path = os.path.dirname(os.path.abspath(unicode_path(__file__)))
 
 os.chdir(application_path)
-sys.path.insert(1, os.path.abspath(os.path.join(sys.path[0], "..", "common")))
+sys.path.insert(1, os.path.abspath(os.path.join(application_path, "..", "common")))
 
 # Source runs rely on the vendored pyglet 1.2dev (a compiled-only build that is
 # not published on PyPI, so it cannot go in requirements.txt). The frozen
@@ -79,7 +86,7 @@ if '+debug' in sys.argv:
         debugger_path = os.path.join(application_path, "debugger.exe")
         if os.path.isfile(debugger_path):
             try:
-                subprocess.Popen([debugger_path], cwd=application_path)
+                unicode_popen([debugger_path], cwd=application_path)
             except (OSError, ValueError) as error:
                 print 'Could not start optional debugger viewer: %s' % error
         else:

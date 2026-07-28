@@ -28,70 +28,87 @@ class GraphicsManager(object):
 
     def initialise(self, config):
         self.config = config
+        self.screen_resolutions_dict = {}
+        self.screen_resolutions_by_string = {}
+        self.config.screen_resolutions_by_string = {}
         for mode in self.screen_modes:
-            resolution = ScreenResolution(mode.width, mode.height)
-            self.screen_resolutions_dict[(int(mode.width), int(mode.height))] = resolution
+            try:
+                width = int(mode.width)
+                height = int(mode.height)
+            except (TypeError, ValueError, OverflowError):
+                continue
+            if width < 640 or height < 480:
+                continue
+            resolution = ScreenResolution(width, height)
+            self.screen_resolutions_dict[(width, height)] = resolution
             self.config.screen_resolutions_by_string[resolution.resolution_string] = resolution
 
-        self.config.sorted_screen_resolutions_for_gui = sorted(self.screen_resolutions_dict.iteritems(), key=operator.itemgetter(0))
+        if not self.screen_resolutions_dict:
+            resolution = ScreenResolution(800, 600)
+            self.screen_resolutions_dict[(800, 600)] = resolution
+
+        if self.config.fullscreen:
+            active_pair = (int(self.config.width), int(self.config.height))
+            if active_pair not in self.screen_resolutions_dict:
+                fallback_pair = (
+                    (800, 600)
+                    if (800, 600) in self.screen_resolutions_dict
+                    else sorted(self.screen_resolutions_dict.keys())[0]
+                )
+                self.config.width, self.config.height = fallback_pair
+                active_pair = fallback_pair
+        else:
+            active_pair = (
+                int(self.config.window_width),
+                int(self.config.window_height),
+            )
+
         self.update_resolutions()
-        try:
-            self.current_resolution = self.screen_resolutions_dict[(int(self.config.width), int(self.config.height))]
-        except:
-            self.current_resolution = ScreenResolution(int(self.config.width), int(self.config.height))
+        self.current_resolution = self.screen_resolutions_dict.get(
+            active_pair,
+            ScreenResolution(active_pair[0], active_pair[1]),
+        )
 
     def update_resolutions(self):
         if self.config.fullscreen:
-            height = self.config.height
-            width = self.config.width
+            height = int(self.config.height)
+            width = int(self.config.width)
         else:
-            height = self.config.window_height
-            width = self.config.window_width
-        current_resolution_index = -1
-        custom_resolution_item = None
-        added_custom = False
-        for index, item in enumerate(self.config.sorted_screen_resolutions_for_gui):
-            if item[1].width == width and item[1].height == height:
-                current_resolution_index = index
-            elif item[1].width == 0 and item[1].height == 0:
-                custom_resolution_item = item
-            if current_resolution_index != -1 and custom_resolution_item != None:
-                break
+            height = int(self.config.window_height)
+            width = int(self.config.window_width)
 
-        if current_resolution_index != -1 and custom_resolution_item != None:
-            del self.config.screen_resolutions_by_string[custom_resolution_item[1].resolution_string]
-            self.config.sorted_screen_resolutions_for_gui.remove(custom_resolution_item)
-            current_resolution_index -= 1
-        elif current_resolution_index == -1 and custom_resolution_item == None:
+        items = sorted(
+            self.screen_resolutions_dict.items(),
+            key=operator.itemgetter(0),
+        )
+        active_pair = (width, height)
+        if active_pair in self.screen_resolutions_dict:
+            current_resolution_index = [
+                item[0] for item in items
+            ].index(active_pair)
+        else:
             from aoslib import strings
-            resolution = ScreenResolution(0, 0, strings.CUSTOM)
-            self.screen_resolutions_dict[(0, 0)] = resolution
-            self.config.screen_resolutions_by_string[resolution.resolution_string] = resolution
-            self.config.sorted_screen_resolutions_for_gui = sorted(self.screen_resolutions_dict.iteritems(), key=operator.itemgetter(0))
+            resolution = ScreenResolution(width, height, strings.CUSTOM)
+            items.insert(0, (active_pair, resolution))
             current_resolution_index = 0
-            added_custom = True
-        elif current_resolution_index == -1:
-            current_resolution_index = 0
+
+        resolutions_by_string = {}
+        for pair, resolution in items:
+            resolutions_by_string[resolution.resolution_string] = resolution
+        self.screen_resolutions_by_string = resolutions_by_string
+        self.config.screen_resolutions_by_string = resolutions_by_string
+        self.config.sorted_screen_resolutions_for_gui = items
         self.config.resolution = current_resolution_index
-        self.config.set('resolution', current_resolution_index)
         if self.graphics_tab_resolutions_populate_callback != None:
             self.graphics_tab_resolutions_populate_callback(True, current_resolution_index)
         return
 
     def is_custom_resolution(self, width, height):
-        custom = False
-        found = False
-        for index, item in enumerate(self.config.sorted_screen_resolutions_for_gui):
-            if item[1].width == width and item[1].height == height:
-                found = True
-                from aoslib import strings
-                if item[1].resolution_string == strings.CUSTOM:
-                    custom = True
-                    break
-
-        if not found:
-            custom = True
-        return custom
+        try:
+            pair = (int(width), int(height))
+        except (TypeError, ValueError, OverflowError):
+            return True
+        return pair not in self.screen_resolutions_dict
 
 
 graphics_manager = GraphicsManager()

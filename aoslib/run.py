@@ -215,13 +215,43 @@ if global_config.window_location_x is 0 and global_config.window_location_y is 0
     window.set_location(window.screen.width / 2 - window.width / 2, window.screen.height / 2 - window.height / 2)
 else:
     window.set_location(global_config.window_location_x, global_config.window_location_y)
-window.set_size(global_config.window_width, global_config.window_height)
 if global_config.fullscreen:
     window.setting_fullscreen = True
     try:
         window.set_fullscreen(global_config.fullscreen, width=current_resolution.width, height=current_resolution.height)
     except:
-        window.set_fullscreen(global_config.fullscreen, width=800, height=600)
+        fallback_resolution = the_graphics_manager.screen_resolutions_dict.get(
+            (800, 600)
+        )
+        if fallback_resolution is None:
+            fallback_resolution = sorted(
+                the_graphics_manager.screen_resolutions_dict.items()
+            )[0][1]
+        global_config.width = fallback_resolution.width
+        global_config.height = fallback_resolution.height
+        try:
+            window.set_fullscreen(
+                True,
+                width=fallback_resolution.width,
+                height=fallback_resolution.height,
+            )
+        except:
+            global_config.fullscreen = False
+            window.set_fullscreen(
+                False,
+                width=global_config.window_width,
+                height=global_config.window_height,
+            )
+    finally:
+        window.setting_fullscreen = False
+elif (
+    window.width != global_config.window_width
+    or window.height != global_config.window_height
+):
+    window.set_size(
+        global_config.window_width,
+        global_config.window_height,
+    )
 
 window.invalid = False
 print 'Starting loading screen...'
@@ -347,6 +377,7 @@ import aoslib.gui
 import aoslib.scenes.ingame_menus.ugcSettings
 loadingscreen.update_progress()
 import os
+from revival_paths import native_utf8_path
 print 'Initializing Scene'
 from aoslib.scenes import Scene
 from aoslib.squadEventManager import *
@@ -415,9 +446,9 @@ class BootClass:
         print 'Loading models...'
         from aoslib import physfs
         path = os.getcwd()
-        physfs.append_path(path)
-        physfs.append_path(os.path.join(path, '../Common'))
-        physfs.append_path(os.path.join(path, '../../Common'))
+        physfs.append_path(native_utf8_path(path))
+        physfs.append_path(native_utf8_path(os.path.join(path, '../Common')))
+        physfs.append_path(native_utf8_path(os.path.join(path, '../../Common')))
         import aoslib.models
         aoslib.models.load_models(global_config.orig_detail_level, global_config.model_detail)
         print 'Creating game manager...'

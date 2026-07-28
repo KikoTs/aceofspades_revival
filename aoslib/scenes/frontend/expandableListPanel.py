@@ -65,14 +65,21 @@ class ExpandableListPanel(ListPanelBase):
         return noof_visible_items
 
     def set_list_items_position_on_scroll(self, x, y, width):
+        scroll_offset = 0
+        for row_index in xrange(min(int(self.min_index), len(self.rows))):
+            next_row_index = row_index + 1
+            if next_row_index < len(self.rows):
+                scroll_offset += self.get_row_height(self.rows[next_row_index])
+                scroll_offset += self.line_spacing
+        y += scroll_offset
         for row_index, row in enumerate(self.rows):
-            if row_index < self.min_index or row_index >= self.max_index:
+            row_is_visible = self.min_index <= row_index < self.max_index
+            if not row_is_visible:
                 if row.enable_on_scroll:
                     row.set_enabled(False)
-                row.visible = False
             elif row.enable_on_scroll:
                 row.set_enabled(True)
-            row.visible = True
+            row.visible = row_is_visible
             row_height = self.get_row_height(row)
             if type(row) is CategoryListItem:
                 row_spacing = 0

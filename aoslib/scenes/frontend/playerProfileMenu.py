@@ -77,6 +77,7 @@ class PlayerProfileSummaryListPanel(ListPanelBase):
             min_index_to_render = self.min_index
         else:
             min_index_to_render = self.min_index + 1
+        scroll_offset = self.min_index * (self.row_height + self.line_spacing)
         for row_index, row in enumerate(self.rows):
             if row_index > 0 and (row_index < min_index_to_render or row_index >= self.max_index):
                 if row.enable_on_scroll:
@@ -86,7 +87,7 @@ class PlayerProfileSummaryListPanel(ListPanelBase):
             if row_index == 0:
                 row.update_position(x, y + self.first_item_y_offset, width, self.row_height, width)
             else:
-                row.update_position(x, y, width, self.row_height, width)
+                row.update_position(x, y + scroll_offset, width, self.row_height, width)
             y -= self.row_height + self.line_spacing
 
     def draw_list_items(self):

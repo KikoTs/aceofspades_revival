@@ -26,6 +26,12 @@ except ImportError:  # pragma: no cover - Python 3 source tooling
     from urllib.parse import urlsplit
 
 from revival_http import request
+from revival_paths import (
+    current_executable_path,
+    local_appdata_directory,
+    unicode_popen,
+    unicode_path,
+)
 
 
 REPOSITORY = "KikoTs/aceofspades_revival"
@@ -84,8 +90,9 @@ def _text(value):
 
 def _application_directory():
     if getattr(sys, "frozen", False):
-        return os.path.dirname(os.path.abspath(sys.executable))
-    return os.path.dirname(os.path.abspath(__file__))
+        executable = current_executable_path(fallback=sys.executable)
+        return os.path.dirname(os.path.abspath(executable))
+    return os.path.dirname(os.path.abspath(unicode_path(__file__)))
 
 
 def current_version(app_dir=None):
@@ -604,6 +611,7 @@ def _write_apply_script(
 
     lines = [
         "@echo off",
+        "chcp 65001 >nul",
         "setlocal DisableDelayedExpansion",
         'set "INSTALL=%s"' % app_dir,
         'set "PAYLOAD=%s"' % payload_dir,
@@ -633,7 +641,6 @@ def _write_apply_script(
         'rmdir /s /q "%PRESERVE%" >>"%LOG%" 2>&1',
         'del /q "%ARCHIVE%" >>"%LOG%" 2>&1',
         'del /q "%STALE%" >>"%LOG%" 2>&1',
-        'del /q "%~f0"',
         "exit /b 0",
         ":update_failed",
         '"%SystemRoot%\\System32\\robocopy.exe" "%PRESERVE%" "%INSTALL%" /E /COPY:DAT /DCOPY:DAT /R:1 /W:1 /NP /NFL /NDL >>"%LOG%" 2>&1',
@@ -641,9 +648,8 @@ def _write_apply_script(
         "exit /b 1",
         "",
     ])
-    script_encoding = "mbcs" if os.name == "nt" else "utf-8"
     with open(script_path, "wb") as stream:
-        stream.write("\r\n".join(lines).encode(script_encoding))
+        stream.write("\r\n".join(lines).encode("utf-8"))
     return script_path
 
 
@@ -654,7 +660,11 @@ def prepare_update(asset, app_dir=None, data_dir=None, progress=None):
     parse_version(version)
     app_dir = os.path.abspath(app_dir or _application_directory())
     data_dir = os.path.abspath(
-        data_dir or os.path.join(os.environ.get("LOCALAPPDATA") or app_dir, "AoS Revival")
+        data_dir
+        or os.path.join(
+            local_appdata_directory(fallback=app_dir),
+            u"AoS Revival",
+        )
     )
     updates_dir = os.path.join(data_dir, "updates")
     if not os.path.isdir(updates_dir):
@@ -697,6 +707,17 @@ def launch_prepared_update(prepared):
     script_path = _validate_batch_path(prepared["script"])
     if not os.path.isfile(script_path):
         raise UpdateError("The prepared update script is missing.")
-    command = [os.environ.get("COMSPEC") or "cmd.exe", "/d", "/c", script_path]
+    script_dir = os.path.dirname(script_path)
+    command = [
+        os.environ.get("COMSPEC") or "cmd.exe",
+        "/d",
+        "/c",
+        os.path.basename(script_path),
+    ]
     creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
-    subprocess.Popen(command, close_fds=True, creationflags=creation_flags)
+    unicode_popen(
+        command,
+        cwd=script_dir,
+        close_fds=True,
+        creationflags=creation_flags,
+    )

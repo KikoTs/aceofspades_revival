@@ -10,14 +10,15 @@ import json
 import os
 import sys
 
+from revival_paths import local_appdata_directory
+
 
 APP_NAME = "AoS Revival"
 STATE_VERSION = 1
 
 
 def state_directory():
-    root = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~")
-    return os.path.join(root, APP_NAME)
+    return os.path.join(local_appdata_directory(), u"AoS Revival")
 
 
 def state_path():

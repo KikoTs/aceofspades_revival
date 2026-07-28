@@ -1,6 +1,9 @@
 import hashlib
 import importlib.util
+import os
 from pathlib import Path
+import runpy
+import sys
 
 import pytest
 
@@ -19,6 +22,41 @@ def digest(payload):
 def test_release_spec_does_not_rewrite_executable_resources():
     assert builder.SPEC_TEMPLATE.count("icon=None") == 2
     assert "icon={" not in builder.SPEC_TEMPLATE
+
+
+def test_release_includes_complete_openal_runtime():
+    assert "ALURE32.dll" in builder.EXTRA_RUNTIME_FILES
+    assert "OpenAL32.dll" in builder.EXTRA_RUNTIME_FILES
+
+
+def test_release_spec_installs_unicode_bootstrap_before_tk_runtime_hook():
+    assert "runtime_hooks=[{runtime_hook!r}]" in builder.SPEC_TEMPLATE
+    assert builder.UNICODE_BOOTSTRAP_HOOK.is_file()
+
+
+def test_unicode_bootstrap_uses_the_ascii_runtime_prefix(monkeypatch, tmp_path):
+    runtime = tmp_path / "SHORT"
+    (runtime / "tcl").mkdir(parents=True)
+    (runtime / "tk").mkdir()
+    broken_path = r"C:\Games\????_???\runtime"
+    original_path = list(sys.path)
+
+    monkeypatch.setattr(sys, "prefix", str(runtime))
+    monkeypatch.setattr(sys, "exec_prefix", str(runtime))
+    monkeypatch.setattr(sys, "_MEIPASS", broken_path, raising=False)
+    monkeypatch.setattr(sys, "path", [broken_path] + original_path)
+    for name in ("TCL_LIBRARY", "TK_LIBRARY", "TIX_LIBRARY"):
+        monkeypatch.delenv(name, raising=False)
+
+    runpy.run_path(str(builder.UNICODE_BOOTSTRAP_HOOK))
+
+    assert sys._MEIPASS == str(runtime)
+    assert sys.prefix == str(runtime)
+    assert sys.exec_prefix == str(runtime)
+    assert sys.path[0] == str(runtime)
+    assert os.environ["TCL_LIBRARY"] == str(runtime / "tcl")
+    assert os.environ["TK_LIBRARY"] == str(runtime / "tk")
+    assert os.environ["TIX_LIBRARY"] == str(runtime / "tcl")
 
 
 def test_restore_clean_bootloader_requires_and_copies_pinned_bytes(

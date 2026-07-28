@@ -3,6 +3,8 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
+import subprocess
 import sys
 import zipfile
 
@@ -133,8 +135,8 @@ def test_verify_release_tree_rejects_unlisted_payload(tmp_path):
 
 
 def test_apply_script_preserves_configs_and_uses_scoped_paths(tmp_path):
-    app_dir = tmp_path / "game"
-    update_root = tmp_path / "updates" / "0.1.3"
+    app_dir = tmp_path / "Игри-日本語"
+    update_root = tmp_path / "обновяване-日本語" / "0.1.3"
     payload = update_root / "payload"
     preserved = update_root / "preserved"
     for directory in (app_dir, payload, preserved):
@@ -148,11 +150,66 @@ def test_apply_script_preserves_configs_and_uses_scoped_paths(tmp_path):
         ["obsolete.dll"],
     )
     text = open(script, "rb").read().decode("utf-8")
+    assert "chcp 65001 >nul" in text
     assert "robocopy.exe" in text
     assert str(app_dir) in text
     assert 'del /q "%ARCHIVE%"' in text
     assert "rmdir /s /q \"%INSTALL%\\server\\_internal\\numpy\"" in text
     assert (update_root / "stale-files.txt").read_text().strip() == "obsolete.dll"
+
+
+@pytest.mark.skipif(os.name != "nt", reason="requires the Windows update tools")
+def test_apply_script_runs_with_unicode_install_and_staging_paths(
+    monkeypatch,
+    tmp_path,
+):
+    root = tmp_path / "Потребител-日本語"
+    app_dir = root / "Игри-日本語"
+    update_root = root / "обновяване-日本語" / "0.1.3"
+    payload = update_root / "payload"
+    preserved = update_root / "preserved"
+    for directory in (app_dir, payload, preserved):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    shutil.copy2(
+        Path(os.environ["SystemRoot"]) / "System32" / "where.exe",
+        payload / "aos.exe",
+    )
+    (payload / "updated-日本語.txt").write_text("updated", encoding="utf-8")
+    (preserved / "config.txt").write_text("preserved", encoding="utf-8")
+    stale_name = "стар-файл-日本語.dll"
+    (app_dir / stale_name).write_text("stale", encoding="utf-8")
+    archive = update_root / "release.zip"
+    archive.write_bytes(b"verified fixture")
+
+    monkeypatch.setattr(updater.os, "getpid", lambda: 2147483646)
+    script = updater._write_apply_script(
+        str(update_root),
+        str(app_dir),
+        str(payload),
+        str(preserved),
+        [stale_name],
+        archive_path=str(archive),
+    )
+    completed = subprocess.run(
+        [
+            os.environ.get("COMSPEC") or "cmd.exe",
+            "/d",
+            "/c",
+            os.path.basename(script),
+        ],
+        cwd=str(update_root),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=30,
+    )
+
+    assert completed.returncode == 0, (
+        completed.stdout + completed.stderr
+    ).decode("utf-8", "replace")
+    assert (app_dir / "updated-日本語.txt").read_text(encoding="utf-8") == "updated"
+    assert (app_dir / "config.txt").read_text(encoding="utf-8") == "preserved"
+    assert not (app_dir / stale_name).exists()
 
 
 def test_stale_paths_never_trusts_manifest_traversal(tmp_path):

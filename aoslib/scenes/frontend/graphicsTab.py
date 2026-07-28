@@ -219,17 +219,20 @@ class GraphicsTab(TabBase):
         old_resolution = self.original_resolution
         if self.resolution_row is not None:
             resolution_name = self.resolution_row.get_current_value_as_text()
-            the_resolution = self.config.screen_resolutions_by_string[resolution_name]
+            the_resolution = self.config.screen_resolutions_by_string.get(
+                resolution_name
+            )
             current_resolution_index = self.resolution_row.get_current_value()
-            if old_resolution != current_resolution_index:
-                cfg.set('resolution', current_resolution_index)
-                if not cfg.fullscreen:
-                    cfg.set('window_height', the_resolution.height)
-                    cfg.set('window_width', the_resolution.width)
-                else:
-                    cfg.set('height', the_resolution.height)
-                    cfg.set('width', the_resolution.width)
-                defer_save = True
+            if (
+                the_resolution is not None
+                and old_resolution != current_resolution_index
+            ):
+                defer_save = cfg.apply_display_mode(
+                    cfg.fullscreen,
+                    the_resolution.width,
+                    the_resolution.height,
+                    current_resolution_index,
+                )
             the_graphics_manager.update_resolutions()
         if needs_restart:
             self.manager.big_text.text = strings.CHANGE_MSAA_SETTINGS + '\n'

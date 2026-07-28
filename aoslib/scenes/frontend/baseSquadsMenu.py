@@ -30,6 +30,8 @@ class BaseSquadsMenu(ListPreviewMenuBase):
 
     def initialize(self):
         super(BaseSquadsMenu, self).initialize(self.title)
+        self.auto_data_refresh_callback = None
+        self.auto_data_refresh_enabled = False
         self.list_panel = ListPanelBase(self.manager)
         self.preview_panel = PreviewPanelBase(self.manager)
         self.button_height = 50
@@ -80,13 +82,16 @@ class BaseSquadsMenu(ListPreviewMenuBase):
         self.on_refresh()
         chatLog.profanity_manager = self.manager.game_scene.profanity_manager
         chatLog.clear_log()
+        self.auto_data_refresh_enabled = True
         self.auto_data_refresh_callback = reactor.callLater(1.0, self.on_auto_data_refresh)
         return
 
     def on_stop(self):
-        if self.auto_data_refresh_callback:
-            self.auto_data_refresh_callback.cancel()
-            self.auto_data_refresh_callback = None
+        self.auto_data_refresh_enabled = False
+        callback = self.auto_data_refresh_callback
+        self.auto_data_refresh_callback = None
+        if callback is not None and callback.active():
+            callback.cancel()
         self.last_selected_filter_index = self.server_type_filter.get_selected_index()
         self.selected_row = self.list_panel.get_selected_item()
         squadEventMgr.unregister_callback(squadEventMgr.on_data_changed, self.on_data_changed)
@@ -245,7 +250,12 @@ class BaseSquadsMenu(ListPreviewMenuBase):
         super(BaseSquadsMenu, self).draw()
 
     def on_auto_data_refresh(self):
+        self.auto_data_refresh_callback = None
+        if not self.auto_data_refresh_enabled:
+            return
         self.on_refresh()
+        if not self.auto_data_refresh_enabled:
+            return
         self.auto_data_refresh_callback = reactor.callLater(1.0, self.on_auto_data_refresh)
         other_row = None
         if len(self.list_panel.rows) > 0:

@@ -42,6 +42,7 @@ ICON_PNG_SOURCES = [
 PRODUCT_NAME = "AoS Revival"
 MANIFEST_NAME = "build_manifest.json"
 PKG_MANIFEST_NAME = "pkg_manifest.json"
+UNICODE_BOOTSTRAP_HOOK = ROOT / "tools" / "pyi_rth_unicode_bootstrap.py"
 VERSION_FILENAME = "version.txt"
 SOURCE_VERSION_FILE = ROOT / "VERSION"
 
@@ -108,6 +109,7 @@ ASSET_DIRECTORIES = [
 
 EXTRA_RUNTIME_FILES = [
     "ALURE32.dll",
+    "OpenAL32.dll",
     "api_interfaces_32.txt",
     "config.txt",
     "config_user.json",
@@ -127,6 +129,7 @@ REVIVAL_HIDDEN_IMPORTS = [
     "revival_api",
     "revival_http",
     "revival_crypto",
+    "revival_scroll",
     "revival_store",
     "revival_updater",
     "aoslib.jump_smoothing_patch",
@@ -434,7 +437,7 @@ a = Analysis([{run_script!r}],
              datas=[],
              hiddenimports={hiddenimports!r},
              hookspath=[],
-             runtime_hooks=[],
+             runtime_hooks=[{runtime_hook!r}],
              excludes=['setuptools', 'future', 'builtins'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
@@ -669,6 +672,7 @@ def write_spec_file(spec_path: Path) -> None:
         run_script=str(ROOT / 'launcher.py'),
         root=str(ROOT),
         hiddenimports=collect_hidden_imports(),
+        runtime_hook=str(UNICODE_BOOTSTRAP_HOOK),
     )
     spec_path.write_text(payload, encoding='utf-8')
 

@@ -1,10 +1,18 @@
 import ast
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from revival_scroll import consume_wheel_steps
+
+
 MODULE_PATH = (
-    Path(__file__).resolve().parents[1]
+    PROJECT_ROOT
     / "aoslib"
     / "scenes"
     / "frontend"
@@ -174,11 +182,43 @@ def test_mouse_wheel_scrolls_visible_settings_even_over_scrollbar():
         visible_content=True,
         list_panel=list_panel,
     )
-    on_mouse_scroll = load_method("on_mouse_scroll", {})
+    on_mouse_scroll = load_method(
+        "on_mouse_scroll",
+        {"consume_wheel_steps": consume_wheel_steps},
+    )
 
     on_mouse_scroll(panel, 10, 20, 0, -1)
 
     assert calls == [2]
+
+
+def test_precision_wheel_scrolls_only_after_one_complete_notch():
+    calls = []
+    scrollbar = SimpleNamespace(
+        scroll_pos=2,
+        set_scroll=lambda value: calls.append(value),
+    )
+    panel = SimpleNamespace(
+        enabled=True,
+        visible=True,
+        visible_content=True,
+        list_panel=SimpleNamespace(
+            scrollbar=scrollbar,
+            get_mouse_collides=lambda *args, **kwargs: True,
+        ),
+    )
+    on_mouse_scroll = load_method(
+        "on_mouse_scroll",
+        {"consume_wheel_steps": consume_wheel_steps},
+    )
+
+    for _ in range(3):
+        on_mouse_scroll(panel, 10, 20, 0, 0.25)
+    assert calls == []
+
+    on_mouse_scroll(panel, 10, 20, 0, 0.25)
+
+    assert calls == [1]
 
 
 def test_hidden_settings_panel_ignores_mouse_wheel():
@@ -195,7 +235,10 @@ def test_hidden_settings_panel_ignores_mouse_wheel():
             get_mouse_collides=lambda *args, **kwargs: True,
         ),
     )
-    on_mouse_scroll = load_method("on_mouse_scroll", {})
+    on_mouse_scroll = load_method(
+        "on_mouse_scroll",
+        {"consume_wheel_steps": consume_wheel_steps},
+    )
 
     on_mouse_scroll(panel, 10, 20, 0, -1)
 

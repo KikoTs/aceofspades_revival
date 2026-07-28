@@ -13,6 +13,7 @@ import threading
 import time
 import traceback
 import webbrowser
+import xml.etree.ElementTree as element_tree
 
 try:
     import Queue as queue
@@ -31,6 +32,13 @@ except ImportError:
     from tkinter import messagebox, simpledialog, ttk
 
 from revival_api import RevivalApiError, RevivalClient, service_unavailable
+from revival_paths import (
+    current_executable_path,
+    local_appdata_directory,
+    unicode_popen,
+    unicode_path,
+)
+from display_config import repair_display_config_file
 
 
 SITE_URL = "https://www.aosplay.net"
@@ -54,8 +62,8 @@ _LAUNCHER_MUTEX = None
 
 def app_directory():
     if getattr(sys, "frozen", False):
-        return os.path.dirname(os.path.abspath(sys.executable))
-    return os.path.dirname(os.path.abspath(__file__))
+        return os.path.dirname(current_executable_path(sys.executable))
+    return os.path.dirname(os.path.abspath(unicode_path(__file__)))
 
 
 APP_DIR = app_directory()
@@ -101,38 +109,18 @@ except NameError:
 
 def launcher_executable_path():
     """Return a real Unicode path even under the frozen Python 2 runtime."""
-    if os.name == "nt" and getattr(sys, "frozen", False):
-        buffer = ctypes.create_unicode_buffer(32768)
-        length = ctypes.windll.kernel32.GetModuleFileNameW(None, buffer, len(buffer))
-        if length:
-            return buffer.value
-
-    path = os.path.abspath(__file__)
-    if not isinstance(path, TEXT_TYPE):
-        encoding = sys.getfilesystemencoding() or ("mbcs" if os.name == "nt" else "utf-8")
-        path = path.decode(encoding, "replace")
-    return path
+    if getattr(sys, "frozen", False):
+        return current_executable_path(sys.executable)
+    return os.path.abspath(unicode_path(__file__))
 
 
 def check_launcher_path():
-    """Stop early when the recovered game cannot represent its install path."""
-    if os.name != "nt":
-        return
-    path = launcher_executable_path()
-    try:
-        path.encode("ascii")
-        return
-    except UnicodeEncodeError:
-        pass
+    """Return the Unicode launcher path used by every runtime path consumer."""
 
-    message = (
-        u"Ace of Spades cannot start from a folder containing non-English "
-        u"characters.\n\nCurrent path:\n%s\n\nMove the game to a path such as "
-        u"C:\\Games\\AceOfSpades and try again."
-    ) % path
-    flags = 0x00000010 | 0x00010000 | 0x00040000
-    ctypes.windll.user32.MessageBoxW(None, message, u"Unsupported installation path", flags)
-    raise SystemExit(1)
+    path = launcher_executable_path()
+    if not path:
+        raise RuntimeError("The launcher executable path could not be resolved.")
+    return path
 
 
 def display_text(value):
@@ -145,8 +133,7 @@ def display_text(value):
 
 def launcher_data_directory():
     """Return the writable per-user launcher directory."""
-    root = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~")
-    return os.path.join(root, "AoS Revival")
+    return os.path.join(local_appdata_directory(), u"AoS Revival")
 
 
 def launcher_log_path():
@@ -213,6 +200,130 @@ def append_launcher_log(event, exc_info=None):
     return path
 
 
+def _parse_windows_fault_events(payload, process_id, executable_path):
+    """Return the matching Windows Application Error fields from XML."""
+    if not payload:
+        return None
+    if not isinstance(payload, bytes):
+        payload = payload.encode("utf-8")
+    payload = payload.lstrip(b"\xef\xbb\xbf")
+    root = element_tree.fromstring(b"<Events>" + payload + b"</Events>")
+    expected_path = os.path.normcase(os.path.normpath(unicode_path(executable_path)))
+    for event in root:
+        fields = {}
+        event_time = ""
+        for element in event.iter():
+            local_name = element.tag.rsplit("}", 1)[-1]
+            if local_name == "TimeCreated":
+                event_time = element.attrib.get("SystemTime", "")
+            elif local_name == "Data":
+                name = element.attrib.get("Name")
+                if name:
+                    fields[name] = element.text or ""
+        try:
+            event_process_id = int(fields.get("ProcessId", ""), 0)
+        except (TypeError, ValueError):
+            continue
+        event_path = fields.get("AppPath")
+        if event_process_id != int(process_id) or not event_path:
+            continue
+        normalized_path = os.path.normcase(
+            os.path.normpath(unicode_path(event_path))
+        )
+        if normalized_path != expected_path:
+            continue
+        fields["EventTimeUtc"] = event_time
+        return fields
+    return None
+
+
+def query_windows_fault_event(process_id, executable_path):
+    """Read the recent Event ID 1000 matching one failed game process."""
+    if os.name != "nt":
+        return None
+    windows_directory = os.environ.get("WINDIR") or os.environ.get(
+        "SystemRoot",
+        r"C:\Windows",
+    )
+    wevtutil = os.path.join(windows_directory, "System32", "wevtutil.exe")
+    if not os.path.isfile(wevtutil):
+        return None
+    query = (
+        "*[System[(EventID=1000) and "
+        "TimeCreated[timediff(@SystemTime) <= 120000]]]"
+    )
+    command = [
+        wevtutil,
+        "qe",
+        "Application",
+        "/q:%s" % query,
+        "/rd:true",
+        "/c:12",
+        "/f:xml",
+    ]
+    try:
+        process = unicode_popen(
+            command,
+            cwd=os.path.dirname(wevtutil),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000),
+        )
+        output, unused_error = process.communicate()
+        if process.returncode:
+            return None
+        return _parse_windows_fault_events(
+            output,
+            process_id,
+            executable_path,
+        )
+    except (
+        AttributeError,
+        element_tree.ParseError,
+        IOError,
+        OSError,
+        TypeError,
+        UnicodeError,
+        ValueError,
+    ):
+        return None
+
+
+def start_windows_fault_diagnostics(process_id, executable_path):
+    """Append the native Windows crash signature without blocking Tk."""
+
+    def worker():
+        for delay in (0.0, 0.25, 0.75, 1.5):
+            if delay:
+                time.sleep(delay)
+            fields = query_windows_fault_event(process_id, executable_path)
+            if fields is None:
+                continue
+            append_launcher_log(
+                "Windows crash signature: module=%s; module_version=%s; "
+                "module_path=%s; exception=%s; offset=%s; report_id=%s; "
+                "event_time_utc=%s."
+                % (
+                    display_text(fields.get("ModuleName") or "unknown"),
+                    display_text(fields.get("ModuleVersion") or "unknown"),
+                    display_text(fields.get("ModulePath") or "unknown"),
+                    display_text(fields.get("ExceptionCode") or "unknown"),
+                    display_text(fields.get("FaultingOffset") or "unknown"),
+                    display_text(fields.get("IntegratorReportId") or "unknown"),
+                    display_text(fields.get("EventTimeUtc") or "unknown"),
+                )
+            )
+            return
+        append_launcher_log(
+            "Windows crash signature was not available in the Application "
+            "event log within 3 seconds."
+        )
+
+    thread = threading.Thread(target=worker, name="aos-crash-diagnostics")
+    thread.daemon = True
+    thread.start()
+
+
 def show_native_error(title, message):
     """Show a Unicode-safe error even before Tk has initialized."""
     title = display_text(title)
@@ -230,8 +341,8 @@ def show_native_error(title, message):
 def game_command(arguments):
     """Build the isolated client command for source and frozen launchers."""
     if getattr(sys, "frozen", False):
-        return [sys.executable] + list(arguments)
-    return [sys.executable, os.path.abspath(__file__)] + list(arguments)
+        return [launcher_executable_path()] + list(arguments)
+    return [sys.executable, os.path.abspath(unicode_path(__file__))] + list(arguments)
 
 
 def spawn_isolated_game(command):
@@ -247,27 +358,34 @@ def spawn_isolated_game(command):
     """
 
     output_stream = None
-    child_environment = os.environ.copy()
     # cx_Freeze initializes Python's standard streams before ``game_start``.
     # Give that bootstrap a valid codec as the first line of defense; the
     # in-process wrapper below remains authoritative because old Win32GUI
     # bases may still derive ``cp0`` from the absent console code page.
-    # ``unicode_literals`` is enabled in this Python 2-compatible module, but
-    # Python 2's Windows CreateProcess wrapper rejects Unicode environment
-    # keys/values with ``TypeError: environment can only contain strings``.
-    # ``str`` preserves native text on Python 3 and produces the required
-    # byte strings in the retail Python 2 runtime.
-    child_environment[str("PYTHONIOENCODING")] = str("utf-8")
+    # Do not pass a copied Python 2 ``os.environ`` mapping to Popen: Python 2
+    # materializes Windows environment values through ANSI and would replace
+    # Unicode username segments with ``?``. Temporarily set only our ASCII
+    # codec override and let CreateProcess inherit the native Unicode block.
+    encoding_key = str("PYTHONIOENCODING")
+    had_encoding = encoding_key in os.environ
+    previous_encoding = os.environ.get(encoding_key)
+    os.environ[encoding_key] = str("utf-8")
     try:
         output_stream = open(os.devnull, "ab", 0)
-        return subprocess.Popen(
+        return unicode_popen(
             command,
             cwd=APP_DIR,
-            env=child_environment,
             stdout=output_stream,
             stderr=subprocess.STDOUT,
         )
     finally:
+        if had_encoding:
+            os.environ[encoding_key] = previous_encoding
+        else:
+            try:
+                del os.environ[encoding_key]
+            except KeyError:
+                pass
         if output_stream is not None:
             try:
                 output_stream.close()
@@ -361,6 +479,8 @@ def missing_game_files():
     """
     required = [
         os.path.join(APP_DIR, "config.txt"),
+        os.path.join(APP_DIR, "ALURE32.dll"),
+        os.path.join(APP_DIR, "OpenAL32.dll"),
         os.path.join(APP_DIR, "png"),
         os.path.join(APP_DIR, "sounds"),
         os.path.join(APP_DIR, "maps"),
@@ -1259,6 +1379,21 @@ class Launcher(object):
                 parent=self.root,
             )
             return
+        try:
+            display_repairs = repair_display_config_file(
+                os.path.join(APP_DIR, "config.txt")
+            )
+            if display_repairs:
+                append_launcher_log(
+                    "Repaired malformed display settings before launch: %s"
+                    % ", ".join(item[0] for item in display_repairs)
+                )
+        except (IOError, OSError, TypeError, ValueError, UnicodeError) as error:
+            append_launcher_log(
+                "Display settings preflight could not inspect config.txt: %s"
+                % display_text(error),
+                sys.exc_info(),
+            )
         wire_name = display_text(wire_name)
         try:
             wire_bytes = wire_name.encode("utf-8")
@@ -1393,6 +1528,11 @@ class Launcher(object):
         append_launcher_log(
             "Game process failed after %.1f seconds with %s." % (duration, code_text)
         )
+        if (int(exit_code) & 0xFFFFFFFF) == 0xC0000005:
+            start_windows_fault_diagnostics(
+                process.pid,
+                launcher_executable_path(),
+            )
         self.set_status("Game process failed: %s" % code_text, error=True)
         messagebox.showerror(
             "Ace of Spades stopped unexpectedly",
