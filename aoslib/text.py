@@ -872,7 +872,7 @@ class Label(object):
 
 __all__ = ['HUD_FONT',
  'CHAT_FONT',
- 'INPUT_IP',
+ 'input_ip',
  'Label',
  'HUD_FONT_SIZE',
  'CHAT_FONT_SIZE',

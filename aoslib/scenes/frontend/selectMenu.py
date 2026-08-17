@@ -28,25 +28,33 @@ class SelectMenu(MenuScene):
         self.elements = []
         button_y += button_height
         noof_square_buttons = 4.0
-        spacing = 2.0
-        square_button_width = (button_width - (spacing * noof_square_buttons - 1.0)) / noof_square_buttons
-        square_button_x = button_x + square_button_width / 2.0 - spacing
-        square_button_y = button_y - square_button_width / 2.0 + spacing
+        square_button_spacing = 4.0
+        square_button_width = (
+            button_width - square_button_spacing * (noof_square_buttons - 1.0)
+        ) / noof_square_buttons
+        square_button_x = button_x + square_button_width / 2.0
+        square_button_y = button_y - square_button_width / 2.0 + 2.0
         self.tutorial_button = SquareButton(global_images.tutorial_icon, square_button_x, square_button_y, square_button_width)
         self.tutorial_button.set_images(global_images.main_menu_button_square, global_images.main_menu_button_square_hover, global_images.main_menu_button_square_press, False)
         self.tutorial_button.add_handler(self.tutorial_pressed)
         self.elements.append(self.tutorial_button)
-        square_button_x += spacing * 2 + square_button_width
-        self.achievements_button = SquareButton(global_images.achievements_icon, square_button_x, square_button_y, square_button_width)
-        self.achievements_button.set_images(global_images.main_menu_button_square, global_images.main_menu_button_square_hover, global_images.main_menu_button_square_press, False)
+        square_button_x += square_button_spacing + square_button_width
+        self.achievements_button = TextButton(
+            strings.get_by_id('FRIENDS'),
+            square_button_x - square_button_width / 2.0,
+            square_button_y + square_button_width / 2.0,
+            square_button_width,
+            square_button_width,
+            size=10,
+        )
         self.achievements_button.add_handler(self.achievements_pressed)
         self.elements.append(self.achievements_button)
-        square_button_x += spacing * 2 + square_button_width
+        square_button_x += square_button_spacing + square_button_width
         self.leaderboard_button = SquareButton(global_images.leaderboard_icon, square_button_x, square_button_y, square_button_width)
         self.leaderboard_button.set_images(global_images.main_menu_button_square, global_images.main_menu_button_square_hover, global_images.main_menu_button_square_press, False)
         self.leaderboard_button.add_handler(self.leaderboard_pressed)
         self.elements.append(self.leaderboard_button)
-        square_button_x += spacing * 2 + square_button_width
+        square_button_x += square_button_spacing + square_button_width
         self.settings_button = SquareButton(global_images.options_icon, square_button_x, square_button_y, square_button_width)
         self.settings_button.set_images(global_images.main_menu_button_square, global_images.main_menu_button_square_hover, global_images.main_menu_button_square_press, False)
         self.settings_button.add_handler(self.settings_pressed)
@@ -294,8 +302,8 @@ class SelectMenu(MenuScene):
 
     def achievements_pressed(self):
         self.media.play('menu_confirmA', zone=HUD_AUDIO_ZONE)
-        if not SteamShowAchievements():
-            pass
+        from aoslib.scenes.frontend.friendsMenu import FriendsMenu
+        self.parent.set_menu(FriendsMenu)
 
     def leaderboard_pressed(self):
         self.media.play('menu_confirmA', zone=HUD_AUDIO_ZONE)

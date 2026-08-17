@@ -25,6 +25,7 @@ import unicodedata
 import uuid
 
 from revival_paths import local_appdata_directory, unicode_popen
+import relay_host
 
 try:
     WindowsError
@@ -35,6 +36,10 @@ except NameError:  # pragma: no cover - Python 3 compatibility
 BOT_COUNT_PRESETS = ("0", "2", "4", "6", "8", "10", "12", "16", "20", "24")
 BOT_DIFFICULTIES = ("casual", "normal", "hard", "mixed")
 DEFAULT_SERVER_PORT = 27015
+DEFAULT_SERVER_NAME = "Local BattleSpades Match"
+MAX_SERVER_NAME_CHARACTERS = 63
+MIN_ADMIN_PASSWORD_CHARACTERS = 8
+MAX_ADMIN_PASSWORD_CHARACTERS = 64
 TUTORIAL_MODE = "tut"
 TUTORIAL_MAP_FILENAME = "Training.vxl"
 TUTORIAL_MAP_STEM = os.path.splitext(TUTORIAL_MAP_FILENAME)[0]
@@ -46,12 +51,15 @@ UGC_GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS = 15.0
 WINDOWS_OWNER_QUERY_TIMEOUT_SECONDS = 0.75
 WINDOWS_OWNER_QUERY_POLL_SECONDS = 0.01
 WINDOWS_OWNER_QUERY_MAX_BYTES = 4 * 1024 * 1024
+SOCIAL_LOBBY_START_TIMEOUT_SECONDS = 20.0
+RELAY_ALLOCATION_TIMEOUT_SECONDS = 12.0
 _A2S_INFO_QUERY = b"\xff\xff\xff\xffTSource Engine Query\x00"
 
 _ACTIVE_SESSION = None
 _SESSION_LOCK = threading.RLock()
 _DIAGNOSTIC_LOCK = threading.RLock()
 _LOCAL_HOST_LOG_MAX_BYTES = 2 * 1024 * 1024
+_LOCAL_ADMIN_PASSWORDS = {}
 
 
 class LocalHostError(Exception):
@@ -152,6 +160,68 @@ def normalize_port(value):
     if not 1 <= port <= 65535:
         raise LocalHostError("Server port must be between 1 and 65535.")
     return port
+
+
+def normalize_server_name(value):
+    """Validate a BattleSpades server name before config serialization."""
+
+    name = _text(value).strip()
+    if not name:
+        raise LocalHostError("Server name cannot be empty.")
+    if len(name) > MAX_SERVER_NAME_CHARACTERS:
+        raise LocalHostError(
+            "Server name cannot exceed %d characters."
+            % MAX_SERVER_NAME_CHARACTERS
+        )
+    if any(unicodedata.category(character) == "Cc" for character in name):
+        raise LocalHostError("Server name cannot contain control characters.")
+    return name
+
+
+def generate_admin_password():
+    """Create an opaque random password for one local lobby."""
+
+    return "local-" + uuid.uuid4().hex
+
+
+def normalize_admin_password(value):
+    """Validate a password compatible with the server's ``/admin`` parser."""
+
+    password = _text(value)
+    if len(password) < MIN_ADMIN_PASSWORD_CHARACTERS:
+        raise LocalHostError(
+            "Admin password must contain at least %d characters."
+            % MIN_ADMIN_PASSWORD_CHARACTERS
+        )
+    if len(password) > MAX_ADMIN_PASSWORD_CHARACTERS:
+        raise LocalHostError(
+            "Admin password cannot exceed %d characters."
+            % MAX_ADMIN_PASSWORD_CHARACTERS
+        )
+    if any(character.isspace() for character in password):
+        raise LocalHostError("Admin password cannot contain spaces.")
+    if any(unicodedata.category(character) == "Cc" for character in password):
+        raise LocalHostError("Admin password cannot contain control characters.")
+    return password
+
+
+def get_local_admin_password(lobby_id):
+    """Return one private password that is never written to Steam lobby data."""
+
+    key = _text(lobby_id)
+    password = _LOCAL_ADMIN_PASSWORDS.get(key)
+    if password is None:
+        password = generate_admin_password()
+        _LOCAL_ADMIN_PASSWORDS[key] = password
+    return password
+
+
+def set_local_admin_password(lobby_id, value):
+    """Validate and retain one admin password in process memory only."""
+
+    password = normalize_admin_password(value)
+    _LOCAL_ADMIN_PASSWORDS[_text(lobby_id)] = password
+    return password
 
 
 def normalize_ugc_title(value):
@@ -256,7 +326,12 @@ def normalize_lobby_settings(values, rule_names=(), ugc=False):
             rules[key] = value
 
     return {
-        "name": _text(getter("Name") or "Local BattleSpades Match").strip(),
+        "name": normalize_server_name(
+            getter("SERVER_NAME") or getter("Name") or DEFAULT_SERVER_NAME
+        ),
+        "admin_password": normalize_admin_password(
+            getter("ADMIN_PASSWORD") or generate_admin_password()
+        ),
         "port": normalize_port(getter("SERVER_PORT") or DEFAULT_SERVER_PORT),
         "max_players": max_players,
         "match_length": match_length,
@@ -282,6 +357,7 @@ def tutorial_session_settings(port=DEFAULT_SERVER_PORT):
 
     return {
         "name": "BattleSpades Tutorial",
+        "admin_password": generate_admin_password(),
         "port": normalize_port(port),
         "max_players": 12,
         "match_length": 0,
@@ -316,19 +392,29 @@ def build_session_toml(settings, kind="match"):
         difficulty = "mixed"
     maps = normalize_map_rotation(settings.get("maps", []))
     mode = _text(settings.get("mode", "tdm")).strip().lower() or "tdm"
+    server_name = normalize_server_name(
+        settings.get("name", DEFAULT_SERVER_NAME)
+    )
+    admin_password = normalize_admin_password(
+        settings.get("admin_password") or generate_admin_password()
+    )
 
     lines = [
         "# Generated by the AoS Revival client for one local session.",
         "# Deleting this file is safe; the bundled base config is never modified.",
         "",
         "[server]",
-        "name = %s" % _toml_string(settings.get("name", "Local BattleSpades Match")),
+        "name = %s" % _toml_string(server_name),
         "port = %d" % port,
         "max_players = %d" % max_players,
         "tick_rate = 60",
         "",
         "[network]",
         "max_connections = %d" % max_players,
+        "",
+        "[admin]",
+        "password = %s" % _toml_string(admin_password),
+        "log_commands = true",
         "",
         "[game]",
         "default_mode = %s" % _toml_string(mode),
@@ -345,6 +431,7 @@ def build_session_toml(settings, kind="match"):
     if match_length:
         lines.append("match_length_minutes = %d" % match_length)
 
+    public_lobby = settings.get("public_lobby") if kind in ("match", "ugc") else None
     lines.extend([
         "",
         "[bots]",
@@ -370,8 +457,17 @@ def build_session_toml(settings, kind="match"):
         "require_registration = false",
         "",
         "[revival]",
-        "enabled = false",
-        "require_identity = false",
+        "enabled = %s" % ("true" if public_lobby else "false"),
+        "require_identity = %s" % ("true" if public_lobby else "false"),
+    ])
+    if public_lobby:
+        lines.extend([
+            "base_url = %s" % _toml_string(public_lobby["master_url"]),
+            "public_host = %s" % _toml_string(public_lobby["public_host"]),
+            "server_id = %s" % _toml_string(public_lobby["server_id"]),
+            "official = false",
+        ])
+    lines.extend([
         "",
         "[plugins]",
         "enabled = false",
@@ -751,7 +847,8 @@ class LocalServerSession(object):
     """
 
     def __init__(self, process, session_dir, log_stream, stdin_stream, port,
-                 kind="match", owner_manager=None, control_stdin=False):
+                 kind="match", owner_manager=None, control_stdin=False,
+                 public_lobby=None):
         self.process = process
         self.session_dir = session_dir
         self.log_stream = log_stream
@@ -760,6 +857,7 @@ class LocalServerSession(object):
         self.kind = kind
         self.owner_manager = owner_manager
         self.control_stdin = bool(control_stdin)
+        self.public_lobby = public_lobby
         self.session_id = uuid.uuid4().hex
         self._stop_lock = threading.RLock()
 
@@ -784,6 +882,9 @@ class LocalServerSession(object):
         """Stop once, preferring lifecycle cleanup over forced termination."""
 
         with self._stop_lock:
+            if self.public_lobby is not None:
+                self.public_lobby.stop()
+                self.public_lobby = None
             process = self.process
             if process is not None and process.poll() is None:
                 graceful = self._request_graceful_shutdown()
@@ -830,7 +931,8 @@ class LocalServerSession(object):
 
 
 def spawn_hidden(command, cwd, session_dir, port, kind="match",
-                 owner_manager=None, control_stdin=False):
+                 owner_manager=None, control_stdin=False, environment=None,
+                 public_lobby=None):
     """Spawn one server without a visible console window."""
 
     log_path = os.path.join(session_dir, "server-bootstrap.log")
@@ -852,6 +954,7 @@ def spawn_hidden(command, cwd, session_dir, port, kind="match",
             stdin=child_stdin,
             stdout=log_stream,
             stderr=subprocess.STDOUT,
+            env=environment,
             startupinfo=startupinfo,
             creationflags=creationflags,
         )
@@ -870,6 +973,7 @@ def spawn_hidden(command, cwd, session_dir, port, kind="match",
         kind=kind,
         owner_manager=owner_manager,
         control_stdin=control_stdin,
+        public_lobby=public_lobby,
     )
 
 
@@ -953,6 +1057,11 @@ def _fail_session_if_current(menu, session, error):
         if _ACTIVE_SESSION is not session:
             return False
         _ACTIVE_SESSION = None
+    try:
+        from shared.steam import SteamSocialLobbyStartFailed
+        SteamSocialLobbyStartFailed(_text(error))
+    except Exception:
+        pass
     _show_local_error(menu, error)
     cleanup = threading.Thread(
         target=session.stop,
@@ -1042,7 +1151,7 @@ def _connect_when_ready(menu, session, server_mode, name):
             result["error"] = error
             result["finished"] = True
 
-    def connect():
+    def open_loading(identifier):
         _append_local_host_log("reactor connect callback entered", session)
         try:
             with _SESSION_LOCK:
@@ -1061,7 +1170,7 @@ def _connect_when_ready(menu, session, server_mode, name):
                 )
             parent.set_menu(
                 LoadingMenu,
-                identifier="127.0.0.1:%d" % session.port,
+                identifier=identifier,
                 server_mode=server_mode,
                 name=name,
                 from_server_menu=True,
@@ -1080,6 +1189,64 @@ def _connect_when_ready(menu, session, server_mode, name):
                 "The game could not open the local loading screen: %s"
                 % _text(error),
             )
+
+    def connect():
+        public_lobby = getattr(session, "public_lobby", None)
+        if public_lobby is None:
+            open_loading("127.0.0.1:%d" % session.port)
+            return
+
+        publish_deadline = time.time() + 12.0
+
+        def publish_failed(error):
+            if (
+                getattr(error, "code", None) == "relay_not_ready"
+                and time.time() < publish_deadline
+            ):
+                clock.schedule_once(lambda _dt: publish(), 0.5)
+                return
+            _fail_session_if_current(
+                menu,
+                session,
+                "The public server could not be published: %s" % _text(error),
+            )
+
+        def ticket_connected(_ticket):
+            try:
+                from shared.steam import SteamMarkSocialLobbyInGame
+                SteamMarkSocialLobbyInGame()
+            except Exception:
+                pass
+
+        def published(_result):
+            try:
+                import social_match
+                if not social_match.connect(
+                    menu,
+                    public_lobby.server_id,
+                    local_identifier="127.0.0.1:%d" % session.port,
+                    previous_menu=type(menu),
+                    success_callback=ticket_connected,
+                    error_callback=publish_failed,
+                ):
+                    raise LocalHostError("The host join ticket could not be requested.")
+            except Exception as error:
+                publish_failed(error)
+
+        def publish():
+            try:
+                from shared.steam import SteamPublishSocialLobby
+                if not SteamPublishSocialLobby(
+                    public_lobby.lobby_id,
+                    public_lobby.server_id,
+                    published,
+                    publish_failed,
+                ):
+                    raise LocalHostError("The social lobby service is unavailable.")
+            except Exception as error:
+                publish_failed(error)
+
+        publish()
 
     def poll_result(_dt):
         if not poll_started[0]:
@@ -1137,7 +1304,7 @@ def _connect_when_ready(menu, session, server_mode, name):
     clock.schedule_interval(poll_result, 0.05)
 
 
-def _launch_runtime(menu, kind, settings, project=None):
+def _launch_runtime(menu, kind, settings, project=None, public_lobby=None):
     """Create, spawn, and asynchronously connect one menu-owned local host."""
 
     global _ACTIVE_SESSION
@@ -1153,6 +1320,22 @@ def _launch_runtime(menu, kind, settings, project=None):
         # this disposable process and its client connection use the fallback.
         settings = dict(settings)
         settings["port"] = port
+    if public_lobby is not None and kind in ("match", "ugc"):
+        try:
+            public_lobby.start(port)
+            settings = dict(settings)
+            settings["public_lobby"] = public_lobby.settings()
+            _append_local_host_log(
+                "public relay ready at %s" % public_lobby.server_id
+            )
+        except Exception as error:
+            _append_local_host_log(
+                "public relay unavailable: %s"
+                % _text(error),
+                exc_info=sys.exc_info(),
+            )
+            public_lobby.stop()
+            raise LocalHostError("The public relay could not authenticate: %s" % _text(error))
     bundle = resolve_server_bundle()
     session_dir, config_path = create_session_config(settings, kind=kind)
     client_root = application_root()
@@ -1168,6 +1351,7 @@ def _launch_runtime(menu, kind, settings, project=None):
         title=settings.get("ugc_title") if kind == "ugc" else None,
         author=getattr(getattr(menu, "config", None), "name", None),
     )
+    environment = public_lobby.environment() if public_lobby is not None else None
     try:
         session = spawn_hidden(
             command,
@@ -1177,8 +1361,12 @@ def _launch_runtime(menu, kind, settings, project=None):
             kind=kind,
             owner_manager=getattr(menu, "manager", None),
             control_stdin=True,
+            environment=environment,
+            public_lobby=public_lobby,
         )
     except Exception:
+        if public_lobby is not None:
+            public_lobby.stop()
         shutil.rmtree(session_dir, ignore_errors=True)
         raise
     with _SESSION_LOCK:
@@ -1209,6 +1397,8 @@ def _lobby_values(ugc):
     ]
     rule_names = list(A2688.keys())
     values = dict((key, SteamGetLobbyData(lobby_id, key)) for key in keys + rule_names)
+    values["SERVER_NAME"] = values.get("Name") or DEFAULT_SERVER_NAME
+    values["ADMIN_PASSWORD"] = get_local_admin_password(lobby_id)
     return normalize_lobby_settings(values, rule_names, ugc=ugc)
 
 
@@ -1221,11 +1411,144 @@ def start_lobby(menu):
     if getattr(menu, "starting_game", False):
         return True
     try:
-        settings = _lobby_values(bool(getattr(menu, "ugc_mode", False)))
-        project = None
-        if getattr(menu, "ugc_mode", False):
-            project = getattr(menu.manager, "hosted_ugc_map_filename", "") or "Custommap_1"
-        _launch_runtime(menu, "ugc" if getattr(menu, "ugc_mode", False) else "match", settings, project)
+        is_ugc = bool(getattr(menu, "ugc_mode", False))
+        settings = _lobby_values(is_ugc)
+        project = (
+            getattr(menu.manager, "hosted_ugc_map_filename", "") or "Custommap_1"
+        ) if is_ugc else None
+
+        # Mark the authoritative lobby as starting before allocating anything.
+        # Only after that succeeds do we allocate a relay and spawn the server.
+        from pyglet import clock
+
+        menu.starting_game = True
+        try:
+            menu.update_buttons_enabled_state()
+        except Exception:
+            pass
+        nonce = uuid.uuid4().hex
+        menu._relay_lobby_start_nonce = nonce
+
+        def start_ack_timeout(_dt):
+            if (
+                getattr(menu, "_relay_lobby_start_nonce", None) == nonce
+                and getattr(menu, "starting_game", False)
+            ):
+                start_failed(
+                    "The lobby service did not acknowledge Start within "
+                    "%d seconds. Check your connection and try again."
+                    % int(SOCIAL_LOBBY_START_TIMEOUT_SECONDS)
+                )
+
+        def start_failed(error):
+            if getattr(menu, "_relay_lobby_start_nonce", None) != nonce:
+                return
+            clock.unschedule(start_ack_timeout)
+            menu._relay_lobby_start_nonce = None
+            menu.starting_game = False
+            message = _text(getattr(error, "message", None) or error)
+            try:
+                from shared.steam import SteamSocialLobbyStartFailed
+                SteamSocialLobbyStartFailed(message)
+            except Exception:
+                pass
+            _show_local_error(menu, message)
+            try:
+                menu.manager.big_text.text = u"HOST START FAILED\n%s" % message
+                menu.manager.big_text_timer = 8.0
+            except Exception:
+                pass
+
+        def begin_allocation(_result):
+            if (
+                getattr(menu, "_relay_lobby_start_nonce", None) != nonce
+                or not getattr(menu, "starting_game", False)
+            ):
+                return
+            clock.unschedule(start_ack_timeout)
+            result = {"finished": False, "lobby": None, "error": None}
+            result_lock = threading.RLock()
+            allocation_deadline = time.time() + RELAY_ALLOCATION_TIMEOUT_SECONDS
+            allocation_timed_out = [False]
+
+            def worker():
+                lobby = None
+                error = None
+                try:
+                    lobby = relay_host.create_public_lobby(
+                        settings,
+                        logger=_append_local_host_log,
+                    )
+                    if lobby is None:
+                        raise LocalHostError("An online Revival session is required.")
+                except Exception as caught:
+                    error = caught
+                with result_lock:
+                    result["lobby"] = lobby
+                    result["error"] = error
+                    result["finished"] = True
+
+            def poll(_dt):
+                with result_lock:
+                    finished = result["finished"]
+                    lobby = result["lobby"]
+                    error = result["error"]
+                if not finished and time.time() >= allocation_deadline:
+                    if not allocation_timed_out[0]:
+                        allocation_timed_out[0] = True
+                        start_failed(
+                            "The public relay allocation timed out after "
+                            "%d seconds. No server was started."
+                            % int(RELAY_ALLOCATION_TIMEOUT_SECONDS)
+                        )
+                    return
+                cancelled = not bool(getattr(menu, "starting_game", False))
+                if not finished:
+                    return
+                clock.unschedule(poll)
+                if (
+                    allocation_timed_out[0]
+                    or
+                    cancelled
+                    or getattr(menu, "_relay_lobby_start_nonce", None) != nonce
+                ):
+                    if getattr(menu, "_relay_lobby_start_nonce", None) == nonce:
+                        menu._relay_lobby_start_nonce = None
+                    if lobby is not None:
+                        lobby.stop()
+                    return
+                if error is not None:
+                    start_failed(error)
+                    return
+                try:
+                    _launch_runtime(
+                        menu,
+                        "ugc" if is_ugc else "match",
+                        settings,
+                        project=project,
+                        public_lobby=lobby,
+                    )
+                    menu._relay_lobby_start_nonce = None
+                except Exception as caught:
+                    if lobby is not None:
+                        lobby.stop()
+                    start_failed(caught)
+
+            thread = threading.Thread(
+                target=worker,
+                name="aos-public-lobby-allocation",
+            )
+            thread.daemon = True
+            thread.start()
+            clock.schedule_interval(poll, 0.05)
+
+        from shared.steam import SteamStartSocialLobby
+        clock.schedule_once(
+            start_ack_timeout,
+            SOCIAL_LOBBY_START_TIMEOUT_SECONDS,
+        )
+        if not SteamStartSocialLobby(begin_allocation, start_failed):
+            start_failed("The social lobby service is unavailable.")
     except Exception as error:
         _show_local_error(menu, error)
     return True
@@ -1287,3 +1610,117 @@ def create_server_port_row(manager, lobby_id, callback=None):
             SteamSetLobbyData("SERVER_PORT", self.original_text)
 
     return ServerPortListItem()
+
+
+def create_server_name_row(manager, lobby_id, callback=None):
+    """Create an explicit server-name editor backed by the lobby title."""
+
+    from aoslib.scenes.gui.editBoxControl import EditBoxControl
+    from aoslib.scenes.main.matchSettingsListItem import MatchSettingsListItem
+    from shared.steam import SteamGetLobbyData, SteamSetLobbyData
+
+    class ServerNameListItem(MatchSettingsListItem):
+        def initialize(self):
+            MatchSettingsListItem.initialize(
+                self, "Server Name", "SERVER_NAME", lobby_id
+            )
+            raw_value = SteamGetLobbyData(lobby_id, "Name") or DEFAULT_SERVER_NAME
+            try:
+                value = normalize_server_name(raw_value)
+            except LocalHostError:
+                value = DEFAULT_SERVER_NAME
+            SteamSetLobbyData("Name", value)
+            self.original_text = value
+            self.control = EditBoxControl(
+                value,
+                self.x1,
+                self.y1,
+                self.width,
+                self.height,
+                center=False,
+                max_characters=MAX_SERVER_NAME_CHARACTERS,
+            )
+            self.control.on_return_callback = self.on_edit_text
+            self.control.add_handler(self.on_edit_text)
+            self.control.allow_over_typing = True
+            self.elements.append(self.control)
+
+        def update_position(self, x, y, width, height, highlight_width):
+            MatchSettingsListItem.update_position(
+                self, x, y, width, height, highlight_width
+            )
+            self.control.initialise_text(self.original_text)
+
+        def on_edit_text(self):
+            try:
+                value = normalize_server_name(self.control.text)
+            except LocalHostError:
+                self.control.set(self.original_text)
+                self.control.initialise_caret_index()
+                return
+            self.original_text = value
+            self.control.set(value)
+            SteamSetLobbyData("Name", value)
+            if callback is not None:
+                callback(value)
+
+        def reset(self):
+            self.original_text = DEFAULT_SERVER_NAME
+            self.control.set(self.original_text)
+            SteamSetLobbyData("Name", self.original_text)
+
+    return ServerNameListItem()
+
+
+def create_admin_password_row(manager, lobby_id, callback=None):
+    """Create a masked, process-local admin-password editor."""
+
+    from aoslib.scenes.gui.editBoxControl import EditBoxControl
+    from aoslib.scenes.main.matchSettingsListItem import MatchSettingsListItem
+
+    class AdminPasswordListItem(MatchSettingsListItem):
+        def initialize(self):
+            MatchSettingsListItem.initialize(
+                self, "Admin Password", "ADMIN_PASSWORD", lobby_id
+            )
+            self.original_text = get_local_admin_password(lobby_id)
+            self.control = EditBoxControl(
+                self.original_text,
+                self.x1,
+                self.y1,
+                self.width,
+                self.height,
+                center=False,
+                max_characters=MAX_ADMIN_PASSWORD_CHARACTERS,
+            )
+            self.control.is_password = True
+            self.control.on_return_callback = self.on_edit_text
+            self.control.add_handler(self.on_edit_text)
+            self.control.allow_over_typing = True
+            self.elements.append(self.control)
+
+        def update_position(self, x, y, width, height, highlight_width):
+            MatchSettingsListItem.update_position(
+                self, x, y, width, height, highlight_width
+            )
+            self.control.initialise_text(self.original_text)
+
+        def on_edit_text(self):
+            try:
+                value = set_local_admin_password(lobby_id, self.control.text)
+            except LocalHostError:
+                self.control.set(self.original_text)
+                self.control.initialise_caret_index()
+                return
+            self.original_text = value
+            self.control.set(value)
+            if callback is not None:
+                callback(value)
+
+        def reset(self):
+            self.original_text = set_local_admin_password(
+                lobby_id, generate_admin_password()
+            )
+            self.control.set(self.original_text)
+
+    return AdminPasswordListItem()

@@ -20,7 +20,8 @@ from aoslib.scenes.main import matchSettings as match_settings_module
 PRIVACY_TYPES_LIST = [
  strings.INVITE, strings.FRIENDS, strings.OPEN]
 
-# Keep the stock Defaults button valid for the three Revival-only rows.
+# Keep the stock Defaults button valid for Revival's lobby-backed rows.  The
+# server-name and admin-password text rows own their reset behavior directly.
 match_settings_module.DEFAULT_MATCH_SETTINGS.update({
     'BOT_COUNT': '0',
     'BOT_DIFFICULTY': 'mixed',
@@ -234,7 +235,7 @@ class MatchSettingsPanel(LobbyPanelBase):
 
     def on_local_setting_changed(self, value=None):
         # Changing a local host setting cancels any in-progress start so the
-        # bundled server is respawned with the new bots/difficulty/port.
+        # bundled server is respawned with the new host configuration.
         self.cancel_game()
 
     def populate_match_settings_list(self):
@@ -266,6 +267,16 @@ class MatchSettingsPanel(LobbyPanelBase):
                         ('SERVER_PORT', str(local_host.DEFAULT_SERVER_PORT))):
                     if SteamGetLobbyData(self.lobby_id, local_key) == '':
                         SteamSetLobbyData(local_key, local_default)
+                for create_row in (
+                        local_host.create_server_name_row,
+                        local_host.create_admin_password_row):
+                    try:
+                        row = create_row(self.manager, self.lobby_id, callback=self.on_local_setting_changed)
+                        self.list_panel.rows.append(row)
+                    except Exception:
+                        # Text controls are additive; preserve the stock menu
+                        # if a legacy retail UI build cannot construct one.
+                        pass
                 bots = MatchSettingsSliderListItem('Bots', 'BOT_COUNT', self.lobby_id, local_host.BOT_COUNT_PRESETS, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)
                 self.list_panel.rows.append(bots)
                 difficulty = MatchSettingsSliderListItem('Bot Difficulty', 'BOT_DIFFICULTY', self.lobby_id, local_host.BOT_DIFFICULTIES, on_value_changed_callback=self.on_local_setting_changed, media=self.manager.media)

@@ -171,6 +171,11 @@ class LoadingMenu(MenuScene):
 
     def on_navigation(self, is_back):
         if is_back:
+            try:
+                import revival_wire_identity
+                revival_wire_identity.restore(self.manager)
+            except Exception:
+                pass
             if self.previous_menu is None:
                 self.manager.set_main_menu()
             else:
@@ -226,6 +231,11 @@ class LoadingMenu(MenuScene):
                 self.tabs.append(tab_scores)
 
     def on_stop(self):
+        try:
+            import revival_wire_identity
+            revival_wire_identity.restore(self.manager)
+        except Exception:
+            pass
         super(LoadingMenu, self).on_stop()
         self.manager.showing_loading_screen = False
 
@@ -535,6 +545,14 @@ class LoadingMenu(MenuScene):
         #     self.password_box.set('')
         #     self.password_box.visible = True
         if packet.id == InitialInfo.id:
+            # The one-use join code has now been accepted by the authoritative
+            # server.  Restore the canonical nickname before world/player UI
+            # initializes; the server already owns the verified display name.
+            try:
+                import revival_wire_identity
+                revival_wire_identity.restore(self.manager)
+            except Exception:
+                pass
             if self.initial_info_packet_count > 0:
                 self.current_part = 0
             self.initial_info_packet_count += 1

@@ -18,6 +18,12 @@ from aoslib.media import HUD_AUDIO_ZONE
 from aoslib.hud.hud import ViewGameStats
 from shared.constants_DLC import is_tool_selectable
 
+try:
+    PREFAB_NAME_TYPES = (basestring,)
+except NameError:
+    PREFAB_NAME_TYPES = (str,)
+
+
 class SelectClass(MenuScene):
     title = strings.CHOOSE_CLASS
     game_classes = {}
@@ -359,6 +365,11 @@ class SelectClass(MenuScene):
             self.media.play('menu_backA', zone=HUD_AUDIO_ZONE)
 
     def draw_prefab_info(self, button, x, y, prefab_id):
+        # A stale/malformed loadout hover can briefly expose a numeric tool ID
+        # here. Only the flare-block tool has numeric prefab semantics; every
+        # other prefab lookup below requires a string name.
+        if prefab_id != FLAREBLOCK_TOOL and not isinstance(prefab_id, PREFAB_NAME_TYPES):
+            return
         x -= 25
         y -= 30
         glColor4f(1.0, 1.0, 1.0, 1.0)

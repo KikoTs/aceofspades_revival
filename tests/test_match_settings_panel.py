@@ -107,6 +107,8 @@ def run_populate(lobby_type):
         DEFAULT_SERVER_PORT=27015,
         BOT_COUNT_PRESETS=("0", "2", "4"),
         BOT_DIFFICULTIES=("easy", "mixed", "hard"),
+        create_server_name_row=lambda *args, **kwargs: FakeRow("SERVER_NAME"),
+        create_admin_password_row=lambda *args, **kwargs: FakeRow("ADMIN_PASSWORD"),
         create_server_port_row=lambda *args, **kwargs: FakeRow("SERVER_PORT"),
     )
     populate = load_method(
@@ -148,6 +150,8 @@ def test_normal_match_keeps_map_and_rules_before_optional_host_controls():
         "MATCH_LENGTH",
         "MAP_ROTATION_FILENAME",
         "GAME_RULES",
+        "SERVER_NAME",
+        "ADMIN_PASSWORD",
         "BOT_COUNT",
         "BOT_DIFFICULTY",
         "SERVER_PORT",

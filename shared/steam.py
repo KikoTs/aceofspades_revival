@@ -27,6 +27,8 @@ import threading
 import time
 import webbrowser
 
+from shared.revival_lobby_facade import RevivalLobbyFacade
+
 try:
     integer_types = (int, long)
 except NameError:
@@ -958,6 +960,10 @@ _state = {
     "lobbies": {},
     "friend_lobbies": {},
     "friends": [],
+    "friend_records": {},
+    "social_invitations": [],
+    "social_available": False,
+    "social_error": u"",
     "server_lists": {
         "internet": [],
         "official": [],
@@ -1011,8 +1017,11 @@ _state = {
         "lobby_join_request": None,
         "server_requested": None,
         "lobby_data_changed": None,
+        "invite_overlay": None,
     },
 }
+
+_revival_facade = None
 
 
 # When steam_api.dll exists, identity and language come only from Steamworks.
@@ -1081,8 +1090,8 @@ def _load_user_config():
 
 
 def _offline_mode():
-    """Offline mode is allowed only when steam_api.dll is absent."""
-    return not _backend.has_dll_file()
+    """The maintained client never initializes a Steam runtime."""
+    return True
 
 
 def _apply_offline_user_config():
@@ -1118,6 +1127,15 @@ def _current_lobby():
     if not lobby_id:
         return None
     return _ensure_lobby(lobby_id)
+
+
+def _social():
+    global _revival_facade
+    if _revival_facade is None:
+        _revival_facade = RevivalLobbyFacade(
+            _state, _ensure_lobby, _queue_callback, _debug
+        )
+    return _revival_facade
 
 
 def _finish_server_query(finished_callback):
@@ -1170,31 +1188,17 @@ def _offline_steam_id(username):
 
 
 def SteamInitializeClient():
-    # Steam mode has priority whenever steam_api.dll exists.  The JSON fallback
-    # is activated only when the DLL is physically absent.
-    steam_ready = _backend.initialize()
     _state["steam_id"] = 0
     _state["persona_name"] = u""
     _state["language"] = u"english"
-    if steam_ready:
-        _state["steam_id"] = _backend.get_steam_id() or 0
-        _state["persona_name"] = _backend.get_persona_name() or u""
-        _state["language"] = (
-            _backend.get_current_game_language() or u"english"
-        )
-    else:
-        # No working Steam backend (DLL absent, or present but Init failed).
-        # Use the local config_user.json identity so the squad/lobby menus work.
-        _apply_offline_user_config()
-        if _offline_mode():
-            _debug("steam_api.dll absent; local config mode enabled")
-        else:
-            _debug("steam_api.dll present but SteamAPI_Init failed; using local config")
+    # ``shared.steam`` is now an ABI facade only.  Identity comes from the
+    # persisted Revival launcher session, with config_user.json retained for
+    # local/offline play.  steam_api.dll is deliberately never loaded.
+    _apply_offline_user_config()
+    _social().initialize()
     if not _state["steam_id"]:
-        # Without a real Steam identity (offline, or a DLL present but Init
-        # failed), assign a stable non-zero SteamID so the squad/lobby menus
-        # recognize the local player as their own lobby's owner and member.
-        # Otherwise create-match's SteamCreateLobby callback opens no submenu.
+        # Offline-local identities remain usable for local gameplay, but the
+        # social facade refuses network lobby actions without a session token.
         _state["steam_id"] = _offline_steam_id(
             _state["persona_name"] or _load_user_config()["username"]
         )
@@ -1205,16 +1209,14 @@ def SteamInitializeClient():
 
 def SteamShutdownClient():
     SteamCancelSessionTicket()
-    _backend.shutdown()
+    _social().shutdown()
     with _lock:
         _state["client_initialized"] = False
     return None
 
 
 def SteamIsLoggedOn():
-    if _offline_mode():
-        return bool(_state["client_initialized"])
-    return bool(_backend.initialized)
+    return bool(_state["client_initialized"])
 
 
 def SteamStartScene():
@@ -1251,7 +1253,7 @@ def SteamShowWebPage(url):
 
 def SteamUpdate(scene):
     _state["scene"] = scene
-    _backend.update()
+    _social().update()
     _drain_callbacks()
     return None
 
@@ -1274,8 +1276,9 @@ def SteamActivateGameOverlayToStore(app_id):
 
 
 def SteamIsDLCInstalled(app_id):
-    """Check DLC availability through the backend implementation."""
-    return _backend.is_dlc_installed(_to_app_id(app_id))
+    """Expose the standalone game's bundled content without Steamworks."""
+    _to_app_id(app_id)
+    return True
 
 
 def SteamIsDemoRunning():
@@ -1283,25 +1286,18 @@ def SteamIsDemoRunning():
 
 
 def SteamGetPersonaName():
-    # With a Steam DLL, query ISteamFriends every time.  Only a physically
-    # missing DLL enables the config_user.json fallback.
-    if _offline_mode():
-        config = _apply_offline_user_config()
-        return config["username"]
-
-    persona_name = _backend.get_persona_name()
-    if not persona_name:
-        _state["persona_name"] = u""
-        return u""
-    _state["persona_name"] = persona_name
-    return persona_name
+    persona_name = _to_text(_state.get("persona_name")).strip()
+    if persona_name:
+        return persona_name
+    config = _apply_offline_user_config()
+    return config["username"]
 
 
 def SteamGetFriendPersonaName(steam_id):
     steam_id = _to_int(steam_id, 0)
-    for friend in _state["friends"]:
-        if isinstance(friend, dict) and _to_int(friend.get("steam_id"), 0) == steam_id:
-            return _to_text(friend.get("name"))
+    friend = _state["friend_records"].get(steam_id)
+    if isinstance(friend, dict):
+        return _to_text(friend.get("nickname") or friend.get("name"))
     return u"[unknown]"
 
 
@@ -1310,10 +1306,6 @@ def SteamGetFriendList():
 
 
 def GetUserSteamID():
-    if _backend.initialized:
-        steam_id = _backend.get_steam_id()
-        if steam_id:
-            _state["steam_id"] = steam_id
     return int(_state["steam_id"])
 
 
@@ -1526,7 +1518,6 @@ def SteamChangeMaxPlayersCount(count):
 
 
 def SteamUpdateServer():
-    _backend.update()
     _drain_callbacks()
     return None
 
@@ -1577,13 +1568,11 @@ def SteamSendSessionTicket(client):
 
 
 def SteamGetSessionTicket():
-    # The original implementation cancels the previous handle before creating
-    # a fresh ticket.
+    # Revival join tickets are requested from the authenticated relay API and
+    # carried as a temporary wire-name override.  The legacy network stack
+    # still calls this function, but it must never initialize Steamworks.
     SteamCancelSessionTicket()
-    ticket, handle = _backend.create_session_ticket()
-    _state["session_ticket"] = ticket
-    _state["session_ticket_handle"] = handle
-    return ticket
+    return ""
 
 
 def SteamSendPassword(client, name, ip, port):
@@ -1606,9 +1595,6 @@ def SteamGetAuthenticatingSteamId():
 
 
 def SteamCancelSessionTicket():
-    handle = _state.get("session_ticket_handle", 0)
-    if handle:
-        _backend.cancel_session_ticket(handle)
     _state["session_ticket"] = ""
     _state["session_ticket_handle"] = 0
     return None
@@ -1660,15 +1646,8 @@ def SteamServerUpdatePlayer(steamId, name, score):
 
 
 def SteamGetCurrentGameLanguage():
-    if _offline_mode():
-        config = _apply_offline_user_config()
-        return config["language"]
-
-    language = _backend.get_current_game_language()
-    if language:
-        _state["language"] = language
-        return language
-    return _state.get("language", u"english") or u"english"
+    config = _apply_offline_user_config()
+    return config["language"]
 
 
 # ---------------------------------------------------------------------------
@@ -1680,63 +1659,37 @@ def ResetLobbyState():
         _state["current_lobby"] = 0
         _state["lobbies"] = {}
         _state["friend_lobbies"] = {}
+        _state["social_invitations"] = []
     return None
 
 
 def SteamCreateLobby(created_callback, create_error_callback):
-    del create_error_callback
-    with _lock:
-        lobby_id = _state["next_lobby_id"]
-        _state["next_lobby_id"] += 1
-        lobby = _ensure_lobby(lobby_id)
-        lobby["owner"] = GetUserSteamID()
-        if lobby["owner"] and lobby["owner"] not in lobby["members"]:
-            lobby["members"].append(lobby["owner"])
-        _state["current_lobby"] = lobby_id
-    _queue_callback(created_callback, lobby_id)
-    return lobby_id
+    return _social().create_lobby(created_callback, create_error_callback)
 
 
 def SteamJoinLobby(joined_callback, join_error_callback, lobby_id):
-    del join_error_callback
-    lobby_id = _to_int(lobby_id, 0)
-    if lobby_id <= 0:
-        return False
-    lobby = _ensure_lobby(lobby_id)
-    steam_id = GetUserSteamID()
-    with _lock:
-        _state["current_lobby"] = lobby_id
-        if steam_id and steam_id not in lobby["members"]:
-            lobby["members"].append(steam_id)
-    _queue_callback(joined_callback, lobby_id)
-    return True
+    return _social().join_lobby(
+        lobby_id, joined_callback, join_error_callback, blocking=False
+    )
 
 
-def SteamLeaveLobby():
-    lobby = _current_lobby()
-    steam_id = GetUserSteamID()
-    if lobby is not None and steam_id in lobby["members"]:
-        lobby["members"].remove(steam_id)
-        callback = _state["callbacks"]["lobby_user_left"]
-        _queue_callback(callback, steam_id)
-    _state["current_lobby"] = 0
+def SteamLeaveLobby(success_callback=None, error_callback=None):
+    _social().leave_lobby(success_callback, error_callback)
     return None
 
 
 def SteamSetLobbyMaxPlayers(lobby_id, max_players):
-    _ensure_lobby(lobby_id)["max_players"] = _to_int(max_players)
-    return True
+    del lobby_id
+    return _social().set_max_members(max_players)
 
 
 def SteamEnumerateFriendLobbies(found_callback):
-    for friend_id, lobby_id in list(_state["friend_lobbies"].items()):
-        _queue_callback(found_callback, friend_id, lobby_id)
+    _social().enumerate_lobbies(found_callback, friends_only=True)
     return None
 
 
 def SteamEnumeratePublicLobbies(found_callback):
-    for lobby_id in sorted(_state["lobbies"]):
-        _queue_callback(found_callback, lobby_id)
+    _social().enumerate_lobbies(found_callback, friends_only=False)
     return None
 
 
@@ -1757,6 +1710,15 @@ def SteamGetFriendLobbyOwner(friend_id):
 
 
 def SteamShowInviteFriendOverlay():
+    callback = _state["callbacks"].get("invite_overlay")
+    if callable(callback):
+        _queue_callback(callback)
+        return True
+    return None
+
+
+def SteamRegisterInviteOverlayCallback(callback):
+    _state["callbacks"]["invite_overlay"] = callback
     return None
 
 
@@ -1785,19 +1747,7 @@ def SteamRegisterServerRequestedCallback(server_callback):
 
 
 def SteamSendChatMessage(text):
-    lobby = _current_lobby()
-    if lobby is None:
-        return False
-    message = {
-        "steam_id": GetUserSteamID(),
-        "text": _to_text(text),
-        "time": time.time(),
-    }
-    lobby["chat"].append(message)
-    callback = _state["callbacks"]["lobby_chat"]
-    if callable(callback):
-        _queue_callback(callback, message["steam_id"], message["text"])
-    return True
+    return bool(_social().send_chat(text))
 
 
 def SteamRegisterLobbyDataChangedCallback(data_changed_callback):
@@ -1806,11 +1756,7 @@ def SteamRegisterLobbyDataChangedCallback(data_changed_callback):
 
 
 def SteamSetLobbyData(key, text):
-    lobby = _current_lobby()
-    if lobby is None:
-        return False
-    lobby["data"][_to_text(key)] = _to_text(text)
-    return True
+    return _social().set_lobby_data(key, text)
 
 
 def SteamGetLobbyData(lobby_id, key):
@@ -1838,13 +1784,7 @@ def SteamGetLobbyMemberName(friend_id):
 
 
 def SteamSetLobbyMemberData(key, text):
-    lobby = _current_lobby()
-    if lobby is None:
-        return False
-    steam_id = GetUserSteamID()
-    data = lobby["member_data"].setdefault(steam_id, {})
-    data[_to_text(key)] = _to_text(text)
-    return True
+    return _social().set_member_data(key, text)
 
 
 def SteamGetLobbyMemberData(lobby_id, friend_id, key):
@@ -1904,11 +1844,7 @@ def SteamClearLobbyGameServer():
 
 
 def SteamSetLobbyAccessibility(accessibility):
-    lobby = _current_lobby()
-    if lobby is None:
-        return False
-    lobby["accessibility"] = accessibility
-    return True
+    return _social().set_privacy(accessibility)
 
 
 def SteamSetRichPresenceLobby(lobby_id):
@@ -1947,12 +1883,82 @@ def GetPublishedUGCHandle():
 
 def SteamRequestLobbyJoin(lobbyID, block=False):
     lobby_id = _to_int(lobbyID, 0)
-    callback = _state["callbacks"]["lobby_join_request"]
-    if callable(callback):
-        if block:
-            return _call_callback(callback, (lobby_id,))
-        return _queue_callback(callback, lobby_id)
-    return False
+    callback = _state["callbacks"].get("lobby_join_request")
+    if not block:
+        return _social().join_lobby(
+            lobby_id, callback, None, blocking=False
+        )
+    return _social().join_lobby(
+        lobby_id, None, None, blocking=bool(block)
+    )
+
+
+def SteamIsSocialAvailable():
+    return _social().available()
+
+
+def SteamGetSocialSnapshot():
+    client = _social().client
+    return dict(client.snapshot) if client is not None else {}
+
+
+def SteamGetSocialInvitations():
+    return list(_state.get("social_invitations") or [])
+
+
+def SteamFindRevivalPlayer(query, found_callback, error_callback=None):
+    return _social().find_player(query, found_callback, error_callback)
+
+
+def SteamFriendAction(action, target, success_callback=None, error_callback=None):
+    return _social().friend_action(
+        action, target, success_callback, error_callback
+    )
+
+
+def SteamInviteFriend(friend_id, success_callback=None, error_callback=None):
+    return _social().invite(friend_id, success_callback, error_callback)
+
+
+def SteamDeclineLobbyInvite(lobby_id, invitation_id=None,
+                            success_callback=None, error_callback=None):
+    social = _social()
+    if not social.available():
+        return False
+    return social.client.lobby_action(
+        lobby_id, "decline_invite", success_callback, error_callback,
+        invitation_id=invitation_id,
+    )
+
+
+def SteamStartSocialLobby(success_callback=None, error_callback=None):
+    return _social().start(success_callback, error_callback)
+
+
+def SteamPublishSocialLobby(relay_lobby_id, server_id,
+                            success_callback=None, error_callback=None):
+    return _social().publish(
+        relay_lobby_id, server_id, success_callback, error_callback
+    )
+
+
+def SteamSocialLobbyStartFailed(message, success_callback=None,
+                                error_callback=None):
+    return _social().start_failed(message, success_callback, error_callback)
+
+
+def SteamMarkSocialLobbyInGame(success_callback=None, error_callback=None):
+    return _social().mark_in_game(success_callback, error_callback)
+
+
+def SteamRequestSocialGameTicket(server_id, success_callback,
+                                 error_callback=None):
+    return _social().game_ticket(server_id, success_callback, error_callback)
+
+
+def SteamGetLobbyServerIdentifier():
+    lobby = _current_lobby()
+    return _to_text(lobby.get("server_id")) if lobby is not None else u""
 
 
 def SteamIsGameOverlayActive():
