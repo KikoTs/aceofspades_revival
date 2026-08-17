@@ -402,6 +402,10 @@ class BootClass:
                 if not SteamRequestLobbyJoin(int(identifier), block=True):
                     self.manager.set_big_text_message(constants.A965, disconnected=False)
                     go_to_main_menu = True
+                else:
+                    from social_lobby_navigation import open_social_lobby
+                    if not open_social_lobby(self.manager, as_scene=True):
+                        go_to_main_menu = True
             except:
                 go_to_main_menu = True
 

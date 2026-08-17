@@ -123,18 +123,27 @@ class HorizontalListSelection(HandlerBase):
         if page_changed == False:
             self._item_index = []
             self._min_index = 0
+        else:
+            self._item_index = [
+                index for index in self._item_index
+                if index < len(self._items) and self._items[index][1] is not None
+            ]
         min_index = self._min_index
         max_index = min_index + self._items_per_page - 1
         for index, image_info in enumerate(self._items):
             if index < min_index or index > max_index:
-                if image_info[0] in selected_items_ids:
+                if image_info[1] is not None and image_info[0] in selected_items_ids:
                     self._item_index.append(index)
                 continue
             if count >= self._items_per_page:
                 break
-            if image_info[1] == None:
-                continue
             button = self._buttons[count]
+            if image_info[1] == None:
+                button.image = None
+                button.draw_background_image = False
+                button.set_draw_border(False)
+                count += 1
+                continue
             if image_info[0] == FLAREBLOCK_TOOL:
                 button.image_scale = 0.1
             else:
@@ -142,6 +151,8 @@ class HorizontalListSelection(HandlerBase):
             button.image = image_info[1]
             if len(image_info) > 2:
                 button.set_enabled(image_info[2])
+            else:
+                button.set_enabled(True)
             button.draw_background_image = self.draw_back_image
             if image_info[0] in selected_items_ids:
                 self._item_index.append(index)
@@ -158,12 +169,17 @@ class HorizontalListSelection(HandlerBase):
         for index in range(count, self._items_per_page):
             self._buttons[index].image = None
             self._buttons[index].draw_background_image = False
+            self._buttons[index].set_draw_border(False)
 
         if len(self._item_index) == 0 and len(self._items) > 0 and len(self._buttons) > 0 and self._min_selected_items > 0:
-            selected_index = 0
-            self._item_index.append(selected_index)
-            button = self._buttons[selected_index]
-            button.set_draw_border(True)
+            for selected_index, image_info in enumerate(self._items):
+                if image_info[1] == None:
+                    continue
+                self._item_index.append(selected_index)
+                if selected_index >= min_index and selected_index <= max_index:
+                    button = self._buttons[selected_index - min_index]
+                    button.set_draw_border(True)
+                break
         if page_changed:
             self.fire_on_page_change_handler(min_index, max_index)
         self.update_navigation_buttons_state()

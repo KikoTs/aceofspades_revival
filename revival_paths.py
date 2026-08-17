@@ -200,6 +200,38 @@ def _close_child_handle(value):
         ctypes.windll.kernel32.CloseHandle(_handle_value(value))
 
 
+def _unpack_execute_child_handles(child_handles):
+    """Accept both Python 2 Windows ``Popen`` private ABI layouts.
+
+    Stock 2.7 passes the six pipe handles directly.  The frozen runtime's
+    newer ``subprocess`` adds its ``to_close`` set before those handles.
+    Keeping the compatibility check here makes an unexpected ABI fail loudly
+    without weakening argument validation for the two supported runtimes.
+    """
+
+    if len(child_handles) == 6:
+        return (None,) + tuple(child_handles)
+    if len(child_handles) == 7:
+        return tuple(child_handles)
+    raise TypeError(
+        "_execute_child expected 6 or 7 child-handle arguments, got %d"
+        % len(child_handles)
+    )
+
+
+def _close_parent_child_handle(value, to_close=None):
+    """Close one inherited child end and retire it from ``to_close``."""
+
+    if value is None:
+        return
+    if to_close is not None:
+        try:
+            to_close.remove(value)
+        except (KeyError, ValueError):
+            pass
+    _close_child_handle(value)
+
+
 def _unicode_environment_block(environment):
     if environment is None:
         return None
@@ -226,13 +258,17 @@ class _UnicodePopen(subprocess.Popen):
         startupinfo,
         creationflags,
         shell,
-        p2cread,
-        p2cwrite,
-        c2pread,
-        c2pwrite,
-        errread,
-        errwrite,
+        *child_handles
     ):
+        (
+            to_close,
+            p2cread,
+            p2cwrite,
+            c2pread,
+            c2pwrite,
+            errread,
+            errwrite,
+        ) = _unpack_execute_child_handles(child_handles)
         if shell:
             raise ValueError("unicode_popen does not support shell=True")
 
@@ -303,9 +339,9 @@ class _UnicodePopen(subprocess.Popen):
             if not created:
                 raise ctypes.WinError()
         finally:
-            _close_child_handle(p2cread)
-            _close_child_handle(c2pwrite)
-            _close_child_handle(errwrite)
+            _close_parent_child_handle(p2cread, to_close)
+            _close_parent_child_handle(c2pwrite, to_close)
+            _close_parent_child_handle(errwrite, to_close)
 
         self._child_created = True
         self._handle = _handle_value(process_info.hProcess)

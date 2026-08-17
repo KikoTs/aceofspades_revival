@@ -138,7 +138,7 @@ class LeaderboardMenu(MenuScene):
         return
 
     def on_stop(self):
-        self.manager.score_manager.clear_request_profile_callback()
+        self.manager.score_manager.clear_request_leaderboard_callback()
 
     def on_scroll(self, value, silent=False):
         if self.media is not None and not silent:

@@ -1,3 +1,5 @@
+import math
+
 from tool import Tool
 from aoslib.world import get_next_cube, cube_line
 from aoslib import strings

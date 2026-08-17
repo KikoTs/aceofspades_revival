@@ -122,7 +122,7 @@ class SelectUGC(MenuScene):
         available_class_ids = []
         for id in self.manager.game_scene.selected_team.class_list:
             if id in self.manager.disabled_classes:
-                contine
+                continue
             available_class_ids.append(id)
 
         if len(available_class_ids) == 0:

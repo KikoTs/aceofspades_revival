@@ -126,12 +126,20 @@ REVIVAL_HIDDEN_IMPORTS = [
     "launcher",
     "run",
     "local_host",
+    "relay_host",
     "revival_api",
     "revival_http",
     "revival_crypto",
     "revival_scroll",
+    "revival_social",
     "revival_store",
     "revival_updater",
+    "revival_wire_identity",
+    "social_lobby_navigation",
+    "social_match",
+    "shared.revival_lobby_facade",
+    "aoslib.scenes.frontend.friendsMenu",
+    "aoslib.scenes.main.socialListItem",
     "aoslib.jump_smoothing_patch",
     "aoslib.parachute_key_patch",
     "retail_compat",
@@ -154,7 +162,20 @@ REVIVAL_HIDDEN_IMPORTS = [
 # AOS_BATTLESPADES_DATA.
 BATTLESPADES_REPO = ROOT.parent / "BattleSpades"
 BATTLESPADES_BUNDLE = BATTLESPADES_REPO / "dist" / "BattleSpades"
-BATTLESPADES_SERVER_DATA = ["maps", "prefabs", "plugins", "client_patches"]
+BATTLESPADES_SERVER_DATA = [
+    "maps",
+    "prefabs",
+    "plugins",
+    "client_patches",
+    "configs",
+]
+BATTLESPADES_SERVER_FILES = [
+    "VERSION",
+    "config.toml",
+    "fleet.toml",
+    "LICENSE",
+    "README.md",
+]
 
 # BattleSpades does not import NumPy, but builds made from a broad Python
 # environment can still collect it (and its OpenBLAS runtime).  Do not ship
@@ -163,6 +184,10 @@ SERVER_RUNTIME_EXCLUDES = [
     "_internal/numpy",
     "_internal/numpy.libs",
     "_internal/numpy-2.3.0.dist-info",
+    # Server logs are mutable runtime state. Shipping a pre-existing log in
+    # build_manifest.json makes the installed release fail integrity checks as
+    # soon as BattleSpades appends its first startup line.
+    "logs",
 ]
 
 PKG_RESOURCES_SHIM = '''from __future__ import absolute_import
@@ -834,6 +859,14 @@ def copy_server_bundle(stage_dir: Path) -> None:
         if dst.exists():
             shutil.rmtree(dst)
         shutil.copytree(src, dst)
+
+    for name in BATTLESPADES_SERVER_FILES:
+        src = data_root / name
+        if not src.is_file():
+            raise RuntimeError(
+                f'Server runtime file missing during staging: {src}'
+            )
+        shutil.copy2(src, destination / name)
 
     training = destination / 'maps' / 'Training.vxl'
     if not training.exists():

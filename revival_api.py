@@ -325,3 +325,138 @@ class RevivalClient(object):
         if not ticket or len(ticket.encode("ascii")) != 15 or not ticket.startswith("~"):
             raise RevivalApiError("Master service returned an incompatible join code.", "invalid_join_code")
         return ticket
+
+    def create_lobby(self, metadata):
+        """Allocate one scoped, relay-backed public Match Lobby."""
+
+        token = self.access_token
+        if not token:
+            raise RevivalApiError(
+                "Sign in or create an online guest before hosting publicly.",
+                "authentication_required",
+            )
+        result = self._request(
+            "/api/lobbies",
+            "POST",
+            metadata,
+            token=token,
+            timeout=8,
+        )
+        if not isinstance(result, dict) or not result.get("created"):
+            raise RevivalApiError(
+                "Master service returned an invalid lobby allocation.",
+                "invalid_lobby_allocation",
+            )
+        return result
+
+    def close_lobby(self, lobby_id, server_token):
+        """Release one public listing with its ephemeral lobby credential."""
+
+        return self._request(
+            "/api/lobbies/%s" % lobby_id,
+            "DELETE",
+            token=server_token,
+            timeout=4,
+        )
+
+    # Social methods deliberately remain synchronous.  The game and launcher
+    # each own a single-worker scheduler which serializes these calls and
+    # delivers every result on their UI/main thread.
+    def social_sync(self, cursor, client_instance_id, status="online", metadata=None):
+        token = self.access_token
+        if not token:
+            raise RevivalApiError(
+                "Social features require an online Revival account.",
+                "authentication_required",
+            )
+        try:
+            from urllib import quote
+        except ImportError:
+            from urllib.parse import quote
+        query = [
+            "cursor=" + quote(str(cursor or "0")),
+            "client_instance_id=" + quote(str(client_instance_id)),
+            "status=" + quote(str(status or "online")),
+        ]
+        if metadata:
+            encoded = json.dumps(metadata, separators=(",", ":"))
+            if not isinstance(encoded, bytes):
+                encoded = encoded.encode("utf-8")
+            query.append("metadata=" + quote(encoded))
+        return self._request(
+            "/api/social/sync?" + "&".join(query),
+            token=token,
+            timeout=6,
+        )
+
+    def social_presence_offline(self, client_instance_id):
+        token = self.access_token
+        if not token:
+            return {"offline": True}
+        return self._request(
+            "/api/social/sync",
+            "DELETE",
+            {"client_instance_id": client_instance_id},
+            token=token,
+            timeout=4,
+        )
+
+    def social_friends(self, query=None):
+        token = self.access_token
+        if not token:
+            raise RevivalApiError("Sign in to use Friends.", "authentication_required")
+        path = "/api/social/friends"
+        if query:
+            try:
+                from urllib import quote
+            except ImportError:
+                from urllib.parse import quote
+            value = query.encode("utf-8") if not isinstance(query, bytes) else query
+            path += "?query=" + quote(value)
+        return self._request(path, token=token, timeout=6)
+
+    def social_friend_action(self, action, target):
+        token = self.access_token
+        if not token:
+            raise RevivalApiError("Sign in to use Friends.", "authentication_required")
+        return self._request(
+            "/api/social/friends",
+            "POST",
+            {"action": action, "target": str(target)},
+            token=token,
+            timeout=6,
+        )
+
+    def social_lobbies(self):
+        token = self.access_token
+        if not token:
+            raise RevivalApiError("Sign in to browse social lobbies.", "authentication_required")
+        return self._request("/api/social/lobbies", token=token, timeout=6)
+
+    def social_create_lobby(self, metadata):
+        token = self.access_token
+        if not token:
+            raise RevivalApiError("Sign in to create a social lobby.", "authentication_required")
+        payload = dict(metadata or {})
+        payload["action"] = "create"
+        return self._request(
+            "/api/social/lobbies",
+            "POST",
+            payload,
+            token=token,
+            timeout=6,
+        )
+
+    def social_lobby_action(self, lobby_id, action, **values):
+        token = self.access_token
+        if not token:
+            raise RevivalApiError("Sign in to use social lobbies.", "authentication_required")
+        payload = dict(values)
+        payload["action"] = action
+        return self._request(
+            "/api/social/lobbies/%s" % lobby_id,
+            "POST",
+            payload,
+            token=token,
+            timeout=8,
+        )

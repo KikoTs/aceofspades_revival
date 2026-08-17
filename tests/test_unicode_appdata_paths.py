@@ -17,6 +17,17 @@ import revival_store
 import revival_updater
 
 
+def test_unicode_popen_accepts_stock_and_frozen_python2_handle_layouts():
+    stock = tuple(object() for _ in range(6))
+    frozen = (set(),) + stock
+
+    assert revival_paths._unpack_execute_child_handles(stock) == (None,) + stock
+    assert revival_paths._unpack_execute_child_handles(frozen) == frozen
+
+    with pytest.raises(TypeError, match="expected 6 or 7"):
+        revival_paths._unpack_execute_child_handles(stock[:-1])
+
+
 @pytest.mark.skipif(os.name != "nt", reason="requires Windows wide-path APIs")
 def test_local_appdata_preserves_non_ascii_environment(monkeypatch, tmp_path):
     expected = str(tmp_path / "Кико-日本語")

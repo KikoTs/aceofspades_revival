@@ -32,6 +32,7 @@ except ImportError:
     from tkinter import messagebox, simpledialog, ttk
 
 from revival_api import RevivalApiError, RevivalClient, service_unavailable
+from revival_social import RevivalSocialClient
 from revival_paths import (
     current_executable_path,
     local_appdata_directory,
@@ -762,6 +763,14 @@ class Launcher(object):
     def __init__(self, root):
         self.root = root
         self.api = RevivalClient()
+        self.social = RevivalSocialClient(
+            api=self.api,
+            on_sync=self._social_synced,
+            on_error=self._social_failed,
+            poll_interval=RevivalSocialClient.POLL_LAUNCHER,
+        )
+        self._friends_dialog = None
+        self._friends_widgets = {}
         self.servers = []
         self.busy = False
         self._ui_queue = queue.Queue()
@@ -912,7 +921,7 @@ class Launcher(object):
         self.menu_button = CanvasButton(self, 525, 548, 136, 39, "MAIN MENU", self.play_main_menu, small=True)
         self.local_button = CanvasButton(self, 672, 548, 136, 39, "LOCAL SERVER", self.join_local, small=True)
         self.direct_button = CanvasButton(self, 819, 548, 136, 39, "DIRECT CONNECT", self.direct_connect, small=True)
-        self.steam_button = CanvasButton(self, 525, 597, 210, 36, "PLAY OFFICIAL STEAM", self.open_official_steam, small=True)
+        self.friends_button = CanvasButton(self, 525, 597, 210, 36, "FRIENDS", self.open_friends, small=True)
         self.settings_button = CanvasButton(self, 745, 597, 100, 36, "SETTINGS", self.open_settings, small=True)
         self.site_button = CanvasButton(self, 855, 597, 100, 36, "WEBSITE", lambda: webbrowser.open(SITE_URL), small=True)
 
@@ -942,6 +951,7 @@ class Launcher(object):
         self.root.bind("<Control-l>", lambda event: self.direct_connect())
         self.root.bind("<Control-i>", lambda event: self.open_identity_dialog())
         self.root.bind("<Control-g>", lambda event: self.play_as_guest())
+        self.root.bind("<Control-f>", lambda event: self.open_friends())
         self.root.bind("<Alt-m>", lambda event: self.play_main_menu())
         self.root.bind("<Escape>", lambda event: self.close())
 
@@ -984,6 +994,16 @@ class Launcher(object):
             except Exception:
                 self._handle_callback_exception(*sys.exc_info())
         try:
+            if self.api.access_token and not self.social.available:
+                self.social.available = True
+                self.social._next_poll = 0.0
+            self.social.update()
+        except Exception:
+            append_launcher_log(
+                "Launcher social synchronization failed.",
+                sys.exc_info(),
+            )
+        try:
             self.root.after(50, self._drain_ui_queue)
         except tk.TclError:
             return
@@ -998,6 +1018,7 @@ class Launcher(object):
             self.direct_button,
             self.account_primary,
             self.account_secondary,
+            self.friends_button,
         ):
             button.set_enabled(not self.busy)
 
@@ -1357,7 +1378,7 @@ class Launcher(object):
     def play_main_menu(self):
         self._launch_game(self._preferred_play_name(), None)
 
-    def _launch_game(self, wire_name, identifier):
+    def _launch_game(self, wire_name, identifier, lobby=False):
         if self._game_process is not None:
             messagebox.showinfo(
                 "AoS Revival",
@@ -1439,7 +1460,7 @@ class Launcher(object):
                 sys.exc_info(),
             )
 
-        arguments = self._game_arguments(identifier)
+        arguments = self._game_arguments(identifier, lobby=lobby)
         command = game_command(arguments)
         self.set_status("Deploying to %s…" % (identifier or "the main menu"))
         self.root.update_idletasks()
@@ -1467,10 +1488,13 @@ class Launcher(object):
         self.root.withdraw()
         self.root.after(250, self._poll_game_process)
 
-    def _game_arguments(self, identifier):
+    def _game_arguments(self, identifier, lobby=False):
         arguments = ["+s"]
         if identifier:
-            arguments.extend(["+connect", identifier])
+            arguments.extend([
+                "+connect_lobby" if lobby else "+connect",
+                str(identifier),
+            ])
         if self.debug_enabled:
             arguments.append("+debug")
         return arguments
@@ -1731,11 +1755,312 @@ class Launcher(object):
         y = self.root.winfo_rooty() + (self.HEIGHT - dialog.winfo_height()) // 2
         dialog.geometry("+%d+%d" % (x, y))
 
+    def _social_failed(self, error):
+        """Keep local launch usable while making unavailable social actions clear."""
+        if service_unavailable(error):
+            self.set_status("Friends service is temporarily offline; local play is still available.", error=True)
+        self._refresh_friends_dialog()
+
+    def _social_synced(self, snapshot):
+        invitations = snapshot.get("invitations") or []
+        incoming = [
+            item for item in snapshot.get("friends") or []
+            if item.get("direction") == "incoming"
+        ]
+        count = len(invitations) + len(incoming)
+        self.friends_button.set_text("FRIENDS (%d)" % count if count else "FRIENDS")
+        self._refresh_friends_dialog()
+
+    def _social_action_error(self, error):
+        message = display_text(error) or "The social action could not be completed."
+        self.set_status(message, error=True)
+        parent = self._friends_dialog if self._friends_dialog is not None else self.root
+        try:
+            messagebox.showerror("Revival Friends", message, parent=parent)
+        except tk.TclError:
+            pass
+
+    def _selected_social_record(self, key):
+        widget = self._friends_widgets.get(key)
+        records = self._friends_widgets.get(key + "_records", [])
+        if widget is None:
+            return None
+        selection = widget.curselection()
+        if not selection:
+            return None
+        try:
+            return records[int(selection[0])]
+        except (IndexError, TypeError, ValueError):
+            return None
+
+    def _refresh_friends_dialog(self):
+        dialog = self._friends_dialog
+        if dialog is None:
+            return
+        try:
+            if not dialog.winfo_exists():
+                self._friends_dialog = None
+                return
+        except tk.TclError:
+            self._friends_dialog = None
+            return
+        snapshot = self.social.snapshot or {}
+        friends = [
+            item for item in snapshot.get("friends") or []
+            if item.get("friendship_status") == "accepted"
+        ]
+        requests = [
+            item for item in snapshot.get("friends") or []
+            if item.get("friendship_status") == "pending"
+        ]
+        invitations = list(snapshot.get("invitations") or [])
+        values = {
+            "friends": friends,
+            "requests": requests,
+            "invites": invitations,
+        }
+        for key, records in values.items():
+            widget = self._friends_widgets.get(key)
+            if widget is None:
+                continue
+            selected = widget.curselection()
+            selected_id = None
+            previous = self._friends_widgets.get(key + "_records", [])
+            if selected:
+                try:
+                    selected_id = previous[int(selected[0])].get("legacy_id") or previous[int(selected[0])].get("id")
+                except (IndexError, TypeError, ValueError):
+                    pass
+            widget.delete(0, "end")
+            for index, record in enumerate(records):
+                if key == "friends":
+                    presence = display_text(record.get("presence") or "offline").upper()
+                    lobby = record.get("current_lobby_id")
+                    line = "%s  [%s]%s" % (
+                        display_text(record.get("nickname") or record.get("legacy_id")),
+                        presence,
+                        "  Lobby " + display_text(lobby) if lobby else "",
+                    )
+                elif key == "requests":
+                    line = "%s  (%s)  [%s]" % (
+                        display_text(record.get("nickname")),
+                        display_text(record.get("public_id")),
+                        display_text(record.get("direction") or "pending").upper(),
+                    )
+                else:
+                    inviter = record.get("inviter") or {}
+                    line = "%s invited you to %s" % (
+                        display_text(inviter.get("nickname")),
+                        display_text(record.get("lobby_name") or record.get("lobby_id")),
+                    )
+                widget.insert("end", line)
+                record_id = record.get("legacy_id") or record.get("id")
+                if selected_id is not None and record_id == selected_id:
+                    widget.selection_set(index)
+            self._friends_widgets[key + "_records"] = records
+        status = self._friends_widgets.get("status")
+        if status is not None:
+            if self.social.available:
+                lobby = snapshot.get("lobby") or {}
+                text = "Online%s" % (
+                    " â€¢ Lobby " + display_text(lobby.get("id")) if lobby else ""
+                )
+            else:
+                text = "Social service unavailable â€” exact lookup, invites, and joins are disabled."
+            if self.social.available:
+                text = "Online"
+                if lobby:
+                    text += " - Lobby " + display_text(lobby.get("id"))
+            else:
+                text = "Social service unavailable - exact lookup, invites, and joins are disabled."
+            status.config(text=text, fg=GREEN if self.social.available else RED)
+
+    def _launch_social_lobby(self, lobby_id):
+        lobby_id = display_text(lobby_id)
+        if not lobby_id:
+            return
+        if self._game_process is not None:
+            messagebox.showinfo("AoS Revival", "Close the running game before joining another lobby.", parent=self._friends_dialog or self.root)
+            return
+        current = (self.social.snapshot or {}).get("lobby") or {}
+
+        def launch(_result=None):
+            self._launch_game(self._preferred_play_name(), lobby_id, lobby=True)
+
+        if current and display_text(current.get("id")) != lobby_id:
+            if not messagebox.askyesno(
+                "Leave current lobby?",
+                "Joining this invitation will leave your current lobby. If you are hosting, its relay and server must stop first. Continue?",
+                parent=self._friends_dialog or self.root,
+            ):
+                return
+            self.social.lobby_action(
+                current.get("id"),
+                "leave",
+                success=launch,
+                error=self._social_action_error,
+            )
+            return
+        launch()
+
+    def open_friends(self):
+        if self._friends_dialog is not None:
+            try:
+                self._friends_dialog.deiconify()
+                self._friends_dialog.lift()
+                self._friends_dialog.focus_force()
+                return
+            except tk.TclError:
+                self._friends_dialog = None
+        dialog = tk.Toplevel(self.root)
+        self._friends_dialog = dialog
+        dialog.title("AoS Revival â€” Friends & Lobbies")
+        dialog.configure(bg=PANEL)
+        dialog.title("AoS Revival - Friends & Lobbies")
+        dialog.resizable(False, False)
+        dialog.transient(self.root)
+
+        def closed():
+            self._friends_dialog = None
+            self._friends_widgets = {}
+            dialog.destroy()
+
+        dialog.protocol("WM_DELETE_WINDOW", closed)
+        tk.Label(dialog, text="REVIVAL FRIENDS", bg=PANEL, fg=GOLD_LIGHT, font=("Impact", 18)).pack(pady=(16, 6))
+        lookup = tk.Frame(dialog, bg=PANEL)
+        lookup.pack(fill="x", padx=16, pady=(0, 8))
+        query = tk.Entry(lookup, width=38, bg="#f5ebbc", fg=INK, bd=2, relief="flat", font=("Arial", 10))
+        query.pack(side="left", padx=(0, 8))
+
+        def add_exact():
+            value = query.get().strip()
+            if not value:
+                return
+
+            def found(result):
+                player = (result or {}).get("player")
+                if not player:
+                    self._social_action_error(RevivalApiError("No exact username, nickname, or public ID match was found.", "player_not_found"))
+                    return
+                if not messagebox.askyesno(
+                    "Add friend",
+                    "Send a friend request to %s (%s)?" % (
+                        display_text(player.get("nickname")),
+                        display_text(player.get("public_id")),
+                    ),
+                    parent=dialog,
+                ):
+                    return
+                self.social.friend_action(
+                    "request",
+                    player.get("legacy_id"),
+                    success=lambda result: self.set_status("Friend request sent."),
+                    error=self._social_action_error,
+                )
+
+            self.social.request_friends(value, found, self._social_action_error)
+
+        tk.Button(lookup, text="ADD EXACT", command=add_exact, bg=RED, fg="white", relief="flat", width=12, font=("Arial", 9, "bold")).pack(side="left")
+        query.bind("<Return>", lambda event: add_exact())
+
+        notebook = ttk.Notebook(dialog)
+        notebook.pack(fill="both", expand=True, padx=16, pady=6)
+        for key, title in (("friends", "Friends"), ("requests", "Requests"), ("invites", "Invites")):
+            frame = tk.Frame(notebook, bg=PANEL_LIGHT)
+            widget = tk.Listbox(
+                frame, width=66, height=12, bg="#181b15", fg=CREAM,
+                selectbackground=OLIVE, selectforeground="white",
+                activestyle="none", bd=0, exportselection=False,
+                font=("Arial", 10),
+            )
+            scroll = tk.Scrollbar(frame, orient="vertical", command=widget.yview)
+            widget.configure(yscrollcommand=scroll.set)
+            widget.pack(side="left", fill="both", expand=True, padx=(6, 0), pady=6)
+            scroll.pack(side="right", fill="y", padx=(0, 6), pady=6)
+            notebook.add(frame, text=title)
+            self._friends_widgets[key] = widget
+
+        actions = tk.Frame(dialog, bg=PANEL)
+        actions.pack(fill="x", padx=16, pady=6)
+
+        def friend_action(action):
+            record = self._selected_social_record("friends")
+            if record:
+                self.social.friend_action(action, record.get("legacy_id"), success=lambda result: None, error=self._social_action_error)
+
+        def request_action(action):
+            record = self._selected_social_record("requests")
+            if record:
+                if record.get("direction") != "incoming":
+                    if action == "decline":
+                        action = "remove"
+                    else:
+                        messagebox.showinfo(
+                            "Revival Friends",
+                            "This friend request is waiting for the other player.",
+                            parent=dialog,
+                        )
+                        return
+                self.social.friend_action(action, record.get("legacy_id"), success=lambda result: None, error=self._social_action_error)
+
+        def invite_friend():
+            record = self._selected_social_record("friends")
+            lobby = (self.social.snapshot or {}).get("lobby") or {}
+            if not record or not lobby:
+                return
+            self.social.lobby_action(lobby.get("id"), "invite", target=record.get("legacy_id"), success=lambda result: self.set_status("Lobby invitation sent."), error=self._social_action_error)
+
+        def join_friend():
+            record = self._selected_social_record("friends")
+            if record and record.get("current_lobby_id"):
+                self._launch_social_lobby(record.get("current_lobby_id"))
+
+        def accept_invite():
+            record = self._selected_social_record("invites")
+            if record:
+                self._launch_social_lobby(record.get("lobby_id"))
+
+        def decline_invite():
+            record = self._selected_social_record("invites")
+            if record:
+                self.social.lobby_action(record.get("lobby_id"), "decline_invite", invitation_id=record.get("id"), success=lambda result: None, error=self._social_action_error)
+
+        buttons = (
+            ("ACCEPT REQUEST", lambda: request_action("accept")),
+            ("DECLINE", lambda: request_action("decline")),
+            ("INVITE", invite_friend),
+            ("JOIN", join_friend),
+            ("ACCEPT INVITE", accept_invite),
+            ("DECLINE INVITE", decline_invite),
+            ("REMOVE", lambda: friend_action("remove")),
+            ("BLOCK", lambda: friend_action("block")),
+        )
+        for index, (title, command) in enumerate(buttons):
+            tk.Button(
+                actions, text=title, command=command, bg=OLIVE, fg=CREAM,
+                activebackground="#7e8939", relief="flat", width=16,
+                font=("Arial", 8, "bold"),
+            ).grid(row=index // 4, column=index % 4, padx=2, pady=2)
+        status = tk.Label(dialog, text="Synchronizingâ€¦", bg=PANEL, fg=MUTED, anchor="w", font=("Arial", 9))
+        status.config(text="Synchronizing...")
+        status.pack(fill="x", padx=16, pady=(4, 14))
+        self._friends_widgets["status"] = status
+        self._refresh_friends_dialog()
+        self.social._next_poll = 0.0
+        dialog.update_idletasks()
+        x = self.root.winfo_rootx() + (self.WIDTH - dialog.winfo_width()) // 2
+        y = self.root.winfo_rooty() + (self.HEIGHT - dialog.winfo_height()) // 2
+        dialog.geometry("+%d+%d" % (x, y))
+
     def open_official_steam(self):
         webbrowser.open(STEAM_APP_URL)
         self.set_status("Handing off to the official Steam client (AppID 224540).")
 
     def close(self):
+        try:
+            self.social.shutdown()
+        except Exception:
+            pass
         try:
             self.root.destroy()
         except tk.TclError:

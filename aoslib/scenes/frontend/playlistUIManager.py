@@ -144,4 +144,4 @@ class PlayListUIManager(object):
         return map_name in current_playlist.map_names
 
     def draw(self):
-        super(PlayListMenuBase, self).draw()
+        return

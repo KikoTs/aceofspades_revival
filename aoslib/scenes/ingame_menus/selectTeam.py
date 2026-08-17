@@ -3,10 +3,11 @@ from aoslib.scenes import MenuScene
 from aoslib.text import title_font
 from aoslib.gui import create_large_navbar, TextButton, KeyDisplay
 from aoslib.images import global_images
-from shared.constants import MENU_FONT_COLOR, TEAM_SPECTATOR, TEAM1, TEAM2, SECONDARY_MUSIC_BED_FADE_TIME, SECONDARY_MENU_MUSIC1
+from shared.constants import DEFAULT_CLASS, MENU_FONT_COLOR, TEAM_SPECTATOR, TEAM1, TEAM2, SECONDARY_MUSIC_BED_FADE_TIME, SECONDARY_MENU_MUSIC1
 from . import draw_player_list
 from shared import packet as packets
 from aoslib import media, strings
+from aoslib.hud.hud import ViewGameStats
 from aoslib.media import MUSIC_AUDIO_ZONE, HUD_AUDIO_ZONE
 from aoslib.scenes.main.gameClass import GameClass
 import random
@@ -94,7 +95,7 @@ class SelectTeam(MenuScene):
                     available_class_ids.append(id)
 
                 if len(available_class_ids) == 0:
-                    available_class_ids.append(A553)
+                    available_class_ids.append(DEFAULT_CLASS)
                 if len(available_class_ids) == 1 and not self.manager.skin == 'mafia':
                     game_class = GameClass(self.manager, available_class_ids[0], self.manager.disabled_tools, self.manager.movement_speed_multipliers[available_class_ids[0]], self.config, self.manager.enable_fall_on_water_damage)
                 else:

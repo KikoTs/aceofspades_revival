@@ -8,7 +8,9 @@ This repo is set up to:
 - build release packages in the original `aos.exe` + `aos.pkg` format
 - ship the AoS Revival launcher folded into `aos.exe` (no separate launcher process)
 - talk to the aosplay.net master service for accounts, the server list, and profiles
-- host local Play / Tutorial / UGC matches via the bundled BattleSpades server
+- host Match Lobby games through the Revival UDP relay without router port
+  forwarding; offline/service-unavailable hosts safely remain private
+- host Tutorial / UGC sessions privately via the bundled BattleSpades server
 - avoid shipping `steam_emu`
 - securely update full releases from the official GitHub repository
 
@@ -141,6 +143,14 @@ The staged release also includes:
 
 - `config_user.json` (username/language read by `shared/steam.py`)
 - `server/` — the bundled BattleSpades dedicated server for local matches
+
+An online launcher identity makes the ordinary in-game Match Lobby request one
+ephemeral public relay allocation. The public endpoint appears under the
+community/unofficial server tab while the BattleSpades child continues to bind
+only on the host PC. `relay_host.py` authenticates the tunnel with HMAC and uses
+one loopback UDP socket per remote client so the native ENet server retains
+normal peer separation. The lobby token is passed only in the child process
+environment and is never serialized into `config.toml`.
 
 The shipped release does not include:
 

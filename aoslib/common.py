@@ -183,7 +183,7 @@ def get_lighter_colour(base_colour, factor=25):
 
 
 def get_darker_colour(base_colour, factor=25):
-    return (base_colour[0] - factor, base_colourr[1] - factor, base_colour[2] - factor, base_colour[3])
+    return (base_colour[0] - factor, base_colour[1] - factor, base_colour[2] - factor, base_colour[3])
 
 
 def to_float_color_alpha(color):
@@ -232,8 +232,8 @@ def draw_image_scaled(image, x, y, scale_x, scale_y, alignment='default', clear_
     old_anchor_x = image.anchor_x
     old_anchor_y = image.anchor_y
     if alignment == 'center':
-        image.anchor_x = tex.width / 2
-        image.anchor_y = tex.height / 2
+        image.anchor_x = image.width / 2
+        image.anchor_y = image.height / 2
     elif alignment != 'default':
         image.anchor_x = 0
         image.anchor_y = 0

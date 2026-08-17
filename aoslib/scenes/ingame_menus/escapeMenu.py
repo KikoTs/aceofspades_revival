@@ -49,8 +49,10 @@ class EscapeMenu(MenuScene):
         button_y += button_height + y_pad
         self.resume_button = TextButton(strings.RESUME, button_x, button_y, button_width, button_height, button_size)
         self.resume_button.add_handler(self.resume_button_pressed)
+        self.friends_button = TextButton(u'FRIENDS', 620, 535, 150, 40, 18)
+        self.friends_button.add_handler(self.friends_button_pressed)
         self.elements = [
-         self.disconnect_button, self.quit_button, self.save_button, self.settings_button, self.change_team_button, self.change_class_button, self.constructs_button, self.game_data_button, self.resume_button, self.message_box]
+         self.disconnect_button, self.quit_button, self.save_button, self.settings_button, self.change_team_button, self.change_class_button, self.constructs_button, self.game_data_button, self.resume_button, self.friends_button, self.message_box]
         return
 
     def on_start(self, *arg, **kw):
@@ -192,6 +194,11 @@ class EscapeMenu(MenuScene):
         from aoslib.scenes.frontend.settingsMenu import SettingsMenu
         self.media.play('menu_confirmA', zone=HUD_AUDIO_ZONE)
         self.parent.set_menu(SettingsMenu, in_game_menu=True)
+
+    def friends_button_pressed(self):
+        from aoslib.scenes.frontend.friendsMenu import FriendsMenu
+        self.media.play('menu_confirmA', zone=HUD_AUDIO_ZONE)
+        self.parent.set_menu(FriendsMenu, in_game_menu=True)
 
     def change_class_button_pressed(self):
         game_scene = self.manager.game_scene

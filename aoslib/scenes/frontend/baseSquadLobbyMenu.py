@@ -13,7 +13,7 @@ from aoslib.gui import TextButton
 from aoslib.draw import draw_line
 import local_host
 from aoslib import strings
-from shared.steam import SteamGetPersonaName, SteamGetLobbyMembers, SteamGetCurrentLobby, SteamGetLobbyMemberName, SteamGetPersonaName, SteamShowInviteFriendOverlay, SteamLeaveLobby, SteamGetLobbyOwner, SteamAmITheLobbyOwner, SteamSetLobbyData, SteamSetLobbyMemberData, SteamGetLobbyData, SteamGetLobbyMemberData, SteamSendChatMessage, SteamSetLobbyGameServer, SteamGetLobbyGameServer, SteamClearLobbyGameServer, GetUserSteamID, SteamIsLoggedOn
+from shared.steam import SteamGetPersonaName, SteamGetLobbyMembers, SteamGetCurrentLobby, SteamGetLobbyMemberName, SteamGetPersonaName, SteamShowInviteFriendOverlay, SteamLeaveLobby, SteamGetLobbyOwner, SteamAmITheLobbyOwner, SteamSetLobbyData, SteamSetLobbyMemberData, SteamGetLobbyData, SteamGetLobbyMemberData, SteamSendChatMessage, SteamSetLobbyGameServer, SteamGetLobbyGameServer, SteamClearLobbyGameServer, SteamGetLobbyServerIdentifier, GetUserSteamID, SteamIsLoggedOn
 from aoslib.scenes.frontend.squadChatLog import *
 from aoslib.squadEventManager import *
 from twisted.internet import reactor
@@ -73,6 +73,8 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
         self.team_count = {TEAM1: 0, TEAM2: 0, TEAM_NEUTRAL: 0}
         self.squad_leader_id = None
         self.draw_team_selection_box = False
+        self._social_join_inflight = False
+        self._social_join_server_id = None
         return
 
     def __initialise_panels(self, initial_panel_id=None):
@@ -491,6 +493,10 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
                 elif self.preview_panel.visible_content == False and players_in_game:
                     self.set_panel_visibility(self.previous_panel, False)
                     self.set_panel_visibility(PANEL_PREVIEW, True)
+            elif SteamGetLobbyServerIdentifier() and not self._social_join_inflight:
+                # Each member obtains a separate one-use ticket; no host
+                # address or shared credential is trusted from lobby chat.
+                self.on_join_game()
 
     def on_chat_received(self, friend_id, raw_text):
         try:
@@ -703,6 +709,18 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
     def on_join_game(self):
         if self.is_available():
             self.starting_game = False
+            server_id = SteamGetLobbyServerIdentifier()
+            if server_id:
+                if self._social_join_server_id == server_id and self._social_join_inflight:
+                    return
+                self._social_join_server_id = server_id
+                import social_match
+                social_match.connect(
+                    self,
+                    server_id,
+                    previous_menu=type(self),
+                )
+                return
             server = SteamGetLobbyGameServer()
             if server:
                 from aoslib.scenes.ingame_menus.loadingMenu import LoadingMenu
@@ -732,9 +750,10 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
         # lobby so its hidden process is never orphaned.
         local_host.stop_active_session(self.manager)
         self.starting_game = False
-        if self.start_game_tick_callback:
-            self.start_game_tick_callback.cancel()
-            self.start_game_tick_callback = None
+        callback = self.start_game_tick_callback
+        self.start_game_tick_callback = None
+        if callback is not None and callback.active():
+            callback.cancel()
         if self.server_finder:
             self.server_finder.cancel()
         if self.start_game_button:
@@ -775,7 +794,9 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
     def on_invite_friends(self):
         self.media.stop_sounds()
         self.media.play('menu_confirmA', zone=HUD_AUDIO_ZONE)
-        SteamShowInviteFriendOverlay()
+        from aoslib.scenes.frontend.friendsMenu import FriendsMenu
+        self.parent.set_menu(
+            FriendsMenu, invite_picker=True, return_menu=self.__class__)
 
     def on_confirm(self):
         self.media.stop_sounds()
