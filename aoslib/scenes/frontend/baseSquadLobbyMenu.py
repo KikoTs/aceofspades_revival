@@ -26,6 +26,7 @@ from aoslib.scenes.frontend.playlistServerJoiner import PlaylistServerJoiner
 from aoslib.scenes.main.matchSettings import get_string_as_list
 from aoslib.images import global_images
 from pyglet import gl
+from pyglet.window import mouse
 from aoslib.text import medium_aldo_ui_font, draw_text_with_alignment_and_size_validation, modify_name_to_fix_width
 import playlists, random
 from shared.constants import TEAM1, TEAM2, TEAM_NEUTRAL, TEAM_COLOURS
@@ -55,6 +56,14 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
 
     def initialize(self, ugc_mode=False):
         super(BaseSquadLobbyMenu, self).initialize(self.title)
+        # These used to survive as class attributes when the cached lobby
+        # menu was reopened after a failed host attempt.  A fresh lobby must
+        # never inherit "Waiting For Host" or an old reactor callback.
+        self.starting_game = False
+        self.start_game_timer = 0
+        self.start_game_tick_callback = None
+        self.server_finder = None
+        self.last_host_message = [strings.WAITING_FOR_HOST, 0.0]
         self.invite_button = None
         self.ugc_mode = ugc_mode
         self.__initialise_panels()
@@ -303,6 +312,24 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
         if not self.enabled:
             return
         else:
+            # Pyglet's Windows cursor can report a legacy release coordinate
+            # one frame behind the relative cursor used to draw menu hover.
+            # Preserve the visibly hovered Start button before child controls
+            # recompute ``over`` from that stale release point.  This is kept
+            # local to the lobby instead of changing every retail TextButton.
+            start_button = self.start_game_button
+            activate_start = bool(
+                button == mouse.LEFT
+                and start_button is not None
+                and start_button.enabled
+                and start_button.visible
+                and start_button.over
+                and start_button.pressed
+            )
+            if activate_start:
+                # Suppress TextButton's coordinate-based release activation;
+                # the authoritative activation happens once after dispatch.
+                start_button.pressed = False
             enabled_elements = []
             for element in self.get_elements():
                 if element.enabled:
@@ -319,6 +346,9 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
                     row.drop_box_control.on_mouse_release(x, y, button, modifiers)
                 if row.kick_button_control is not None and row.enabled:
                     row.kick_button_control.on_mouse_release(x, y, button, modifiers)
+
+            if activate_start:
+                self.on_start_game()
 
             return
 

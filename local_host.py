@@ -1410,6 +1410,14 @@ def start_lobby(menu):
     # first click just created and can loop forever under rapid mouse input.
     if getattr(menu, "starting_game", False):
         return True
+    _append_local_host_log("Match Lobby Start requested.")
+    # Give immediate, unambiguous UI feedback before settings normalization or
+    # any network request.  Every failure path below restores this state.
+    menu.starting_game = True
+    try:
+        menu.update_buttons_enabled_state()
+    except Exception:
+        pass
     try:
         is_ugc = bool(getattr(menu, "ugc_mode", False))
         settings = _lobby_values(is_ugc)
@@ -1421,11 +1429,6 @@ def start_lobby(menu):
         # Only after that succeeds do we allocate a relay and spawn the server.
         from pyglet import clock
 
-        menu.starting_game = True
-        try:
-            menu.update_buttons_enabled_state()
-        except Exception:
-            pass
         nonce = uuid.uuid4().hex
         menu._relay_lobby_start_nonce = nonce
 
@@ -1447,6 +1450,7 @@ def start_lobby(menu):
             menu._relay_lobby_start_nonce = None
             menu.starting_game = False
             message = _text(getattr(error, "message", None) or error)
+            _append_local_host_log("Match Lobby Start failed: %s" % message)
             try:
                 from shared.steam import SteamSocialLobbyStartFailed
                 SteamSocialLobbyStartFailed(message)
@@ -1466,6 +1470,9 @@ def start_lobby(menu):
             ):
                 return
             clock.unschedule(start_ack_timeout)
+            _append_local_host_log(
+                "Social lobby acknowledged Start; allocating public relay."
+            )
             result = {"finished": False, "lobby": None, "error": None}
             result_lock = threading.RLock()
             allocation_deadline = time.time() + RELAY_ALLOCATION_TIMEOUT_SECONDS
@@ -1550,7 +1557,16 @@ def start_lobby(menu):
         if not SteamStartSocialLobby(begin_allocation, start_failed):
             start_failed("The social lobby service is unavailable.")
     except Exception as error:
+        _append_local_host_log(
+            "Match Lobby Start preflight failed: %s" % _text(error),
+            exc_info=sys.exc_info(),
+        )
         _show_local_error(menu, error)
+        try:
+            menu.manager.big_text.text = u"HOST START FAILED\n%s" % _text(error)
+            menu.manager.big_text_timer = 8.0
+        except Exception:
+            pass
     return True
 
 

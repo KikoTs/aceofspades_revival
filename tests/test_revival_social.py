@@ -197,6 +197,47 @@ def test_periodic_poll_does_not_backlog_while_http_request_is_running():
     ]
 
 
+def test_worker_chains_queued_action_without_another_ui_update():
+    """A menu transition must not strand Start behind an in-flight poll."""
+
+    class BlockingSyncApi(FakeApi):
+        def __init__(self):
+            FakeApi.__init__(self)
+            self.sync_started = threading.Event()
+            self.sync_release = threading.Event()
+
+        def social_sync(self, cursor, instance_id, status, metadata):
+            self.calls.append(("sync-start", cursor, status))
+            self.sync_started.set()
+            self.sync_release.wait(1.0)
+            self.calls.append(("sync-finish", cursor, status))
+            return {
+                "cursor": "1",
+                "account": self.account,
+                "friends": [],
+                "blocks": [],
+                "invitations": [],
+                "lobby": None,
+                "events": [],
+            }
+
+    api = BlockingSyncApi()
+    client = RevivalSocialClient(api=api, poll_interval=60)
+    client._next_poll = 0.0
+    client.update()
+    assert api.sync_started.wait(1.0)
+
+    client.enqueue("guarded", ("start",))
+    api.gate.set()
+    api.sync_release.set()
+
+    deadline = time.time() + 1.0
+    while time.time() < deadline and ("guarded", "start") not in api.calls:
+        time.sleep(0.005)
+
+    assert ("guarded", "start") in api.calls
+
+
 def test_sync_failures_back_off_exponentially_and_cap():
     client = RevivalSocialClient(api=FakeApi(), poll_interval=3.0)
     job = {"sync": True, "error": None}

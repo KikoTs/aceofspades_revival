@@ -128,3 +128,30 @@ def test_social_start_timeout_restores_button_and_shows_exact_error(monkeypatch)
     assert failures and "did not acknowledge Start" in failures[0]
     assert "did not acknowledge Start" in manager.big_text.text
     assert manager.big_text_timer == 8.0
+
+
+def test_preflight_failure_restores_button_and_shows_exact_error(monkeypatch):
+    monkeypatch.setattr(
+        local_host,
+        "_lobby_values",
+        lambda ugc: (_ for _ in ()).throw(local_host.LocalHostError("bad port")),
+    )
+    manager = SimpleNamespace(
+        hosted_ugc_map_filename="",
+        big_text=SimpleNamespace(text=""),
+        big_text_timer=0.0,
+        set_big_text_message=lambda *args, **kwargs: None,
+    )
+    states = []
+    menu = SimpleNamespace(
+        starting_game=False,
+        ugc_mode=False,
+        manager=manager,
+        update_buttons_enabled_state=lambda: states.append(menu.starting_game),
+    )
+
+    assert local_host.start_lobby(menu) is True
+    assert states[0] is True
+    assert menu.starting_game is False
+    assert "bad port" in manager.big_text.text
+    assert manager.big_text_timer == 8.0

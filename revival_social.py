@@ -191,8 +191,13 @@ class RevivalSocialClient(object):
             with self._lock:
                 self._completed.append((job, result, failure))
                 self._running = False
-            if self._closed:
-                self._start_next()
+            # Do not require another render/menu update to begin the next
+            # queued HTTPS operation.  The recovered client can pause its
+            # SteamUpdate pump during menu transitions; previously a poll
+            # finishing in that gap left Start Game queued indefinitely.
+            # Completion callbacks remain in ``_completed`` and are still
+            # delivered only by ``update`` on the owning UI thread.
+            self._start_next()
 
         thread = threading.Thread(target=worker, name="RevivalSocialHttp")
         thread.daemon = True
