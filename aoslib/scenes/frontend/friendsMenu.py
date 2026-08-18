@@ -66,8 +66,12 @@ def _text(value):
 
 
 def _error_text(error):
-    message = getattr(error, "message", None) or _text(error)
-    return message or u"The social service could not complete this action."
+    try:
+        from revival_api import player_facing_message
+    except ImportError:
+        message = getattr(error, "message", None) or _text(error)
+        return message or u"The social service could not complete this action."
+    return player_facing_message(error)
 
 
 class FriendsMenu(ListPreviewMenuBase):

@@ -338,3 +338,91 @@ def test_invalid_wire_ticket_never_changes_visible_name():
 
     assert revival_wire_identity.activate(manager, "not-a-ticket") is False
     assert manager.config.name == "Player"
+
+
+# ---------------------------------------------------------------------------
+# Player actions used to queue behind the one-second background poll that was
+# already in flight, which added seconds to every Start Game before any real
+# work began.  They now get one dedicated slot; periodic reads stay serialized.
+# ---------------------------------------------------------------------------
+
+
+class LaneApi:
+    access_token = "token"
+    account = {"legacy_id": "123", "nickname": "Tester"}
+
+    def __init__(self):
+        self.started = []
+        self.release_poll = threading.Event()
+
+    def social_sync(self, cursor, instance_id, status, metadata):
+        self.started.append("sync")
+        self.release_poll.wait(2.0)
+        return {
+            "cursor": "1",
+            "account": self.account,
+            "friends": [],
+            "invitations": [],
+            "lobby": None,
+            "events": [],
+        }
+
+    def social_lobby_action(self, lobby_id, action, **values):
+        self.started.append(action)
+        return {"ok": True, "action": action}
+
+
+def wait_for(predicate, timeout=2.0):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if predicate():
+            return True
+        time.sleep(0.005)
+    return False
+
+
+def test_a_player_action_does_not_wait_for_a_running_poll():
+    api = LaneApi()
+    client = RevivalSocialClient(api=api, poll_interval=60)
+    client.update()                       # starts the slow poll
+    assert wait_for(lambda: "sync" in api.started)
+
+    client.lobby_action(1, "start", priority=True)
+
+    assert wait_for(lambda: "start" in api.started), (
+        "Start must not sit behind a background sync that is already in flight"
+    )
+    api.release_poll.set()
+    drain_until(client, lambda: not client._running and not client._priority_running)
+
+
+def test_two_player_actions_still_run_one_at_a_time():
+    api = LaneApi()
+    api.release_poll.set()
+    client = RevivalSocialClient(api=api, poll_interval=60)
+    client._next_poll = time.time() + 60
+
+    client.lobby_action(1, "start", priority=True)
+    client.lobby_action(1, "publish", priority=True)
+
+    drain_until(client, lambda: len(api.started) == 2)
+    assert api.started == ["start", "publish"]
+
+
+def test_priority_results_are_still_delivered_on_the_update_thread():
+    api = LaneApi()
+    api.release_poll.set()
+    client = RevivalSocialClient(api=api, poll_interval=60)
+    client._next_poll = time.time() + 60
+    threads = []
+    client.lobby_action(
+        1, "start",
+        success=lambda result: threads.append(threading.current_thread().ident),
+        priority=True,
+    )
+
+    assert wait_for(lambda: bool(client._completed))
+    assert threads == [], "no callback may run on the worker thread"
+    drain_until(client, lambda: bool(threads))
+
+    assert threads == [threading.current_thread().ident]

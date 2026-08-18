@@ -11,12 +11,19 @@ from __future__ import print_function
 import base64
 import hashlib
 import hmac
+import os
 import select
 import socket
 import struct
 import threading
 import time
 import uuid
+
+# Resolved here, not inside the allocation helper below: the game boots inside
+# ``import aoslib.run`` and therefore holds CPython 2's global import lock for
+# the whole session, so an ``import`` on the allocation worker thread would
+# block forever instead of returning a relay.
+from revival_api import RevivalClient
 
 
 MAGIC = b"AOSR"
@@ -400,8 +407,6 @@ class PublicLobbySession(object):
         }
 
     def environment(self, base=None):
-        import os
-
         environment = dict(base or os.environ)
         environment.update({
             "AOS_MASTER_URL": self.master_url,
@@ -446,8 +451,6 @@ def create_public_lobby(settings, logger=None):
     Network or service errors are raised so the caller can log the downgrade
     explicitly instead of advertising an unreachable endpoint.
     """
-
-    from revival_api import RevivalClient
 
     api = RevivalClient()
     account = api.account or {}

@@ -119,6 +119,13 @@ class SelectMenu(MenuScene):
         self.showing_error = False
 
     def on_start(self):
+        # Any route back to the main menu is past the point where a one-use
+        # join code could still be needed.
+        try:
+            import revival_wire_identity
+            revival_wire_identity.restore(self.manager)
+        except Exception:
+            pass
         self.update_active_buttons()
         if not self.media.is_playing_music('mainmenu'):
             self.media.play_music('mainmenu', self.config.music_volume)

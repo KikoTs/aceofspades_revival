@@ -35,8 +35,14 @@ class RevivalSocialClient(object):
         }
         self._lock = threading.RLock()
         self._pending = []
+        # Player actions such as Start, Publish and the join ticket get their
+        # own single slot.  They used to queue behind a one-second background
+        # poll that was already in flight, which added several seconds to every
+        # Start Game before the first byte of real work was sent.
+        self._priority_pending = []
         self._completed = []
         self._running = False
+        self._priority_running = False
         self._closed = False
         self._next_poll = 0.0
         self._base_interval = float(poll_interval or self.POLL_GAME_MENU)
@@ -71,7 +77,7 @@ class RevivalSocialClient(object):
         )
 
     def enqueue(self, method_name, args=None, kwargs=None,
-                success=None, error=None, coalesce_key=None):
+                success=None, error=None, coalesce_key=None, priority=False):
         if self._closed:
             return False
         job = {
@@ -83,6 +89,16 @@ class RevivalSocialClient(object):
             "coalesce": coalesce_key,
             "sync": method_name == "social_sync",
         }
+        if priority and not job["sync"]:
+            with self._lock:
+                if coalesce_key is not None:
+                    self._priority_pending = [
+                        pending for pending in self._priority_pending
+                        if pending.get("coalesce") != coalesce_key
+                    ]
+                self._priority_pending.append(job)
+            self._start_next()
+            return True
         with self._lock:
             if coalesce_key is not None:
                 self._pending = [
@@ -118,10 +134,11 @@ class RevivalSocialClient(object):
             (metadata,),
             success=success,
             error=error,
+            priority=True,
         )
 
     def lobby_action(self, lobby_id, action, success=None, error=None,
-                     coalesce_key=None, **values):
+                     coalesce_key=None, priority=False, **values):
         return self.enqueue(
             "social_lobby_action",
             (lobby_id, action),
@@ -129,6 +146,7 @@ class RevivalSocialClient(object):
             success,
             error,
             coalesce_key,
+            priority=priority,
         )
 
     def request_lobbies(self, success=None, error=None):
@@ -174,11 +192,22 @@ class RevivalSocialClient(object):
             })
 
     def _start_next(self):
+        """Start at most one background job and one player-action job."""
+        self._start_lane("priority")
+        self._start_lane("normal")
+
+    def _start_lane(self, lane):
         with self._lock:
-            if self._running or not self._pending:
-                return
-            job = self._pending.pop(0)
-            self._running = True
+            if lane == "priority":
+                if self._priority_running or not self._priority_pending:
+                    return
+                job = self._priority_pending.pop(0)
+                self._priority_running = True
+            else:
+                if self._running or not self._pending:
+                    return
+                job = self._pending.pop(0)
+                self._running = True
 
         def worker():
             result = None
@@ -190,16 +219,23 @@ class RevivalSocialClient(object):
                 failure = exc
             with self._lock:
                 self._completed.append((job, result, failure))
-                self._running = False
+                if lane == "priority":
+                    self._priority_running = False
+                else:
+                    self._running = False
             # Do not require another render/menu update to begin the next
             # queued HTTPS operation.  The recovered client can pause its
             # SteamUpdate pump during menu transitions; previously a poll
             # finishing in that gap left Start Game queued indefinitely.
             # Completion callbacks remain in ``_completed`` and are still
             # delivered only by ``update`` on the owning UI thread.
-            self._start_next()
+            self._start_lane(lane)
 
-        thread = threading.Thread(target=worker, name="RevivalSocialHttp")
+        thread = threading.Thread(
+            target=worker,
+            name=("RevivalSocialAction" if lane == "priority"
+                  else "RevivalSocialHttp"),
+        )
         thread.daemon = True
         thread.start()
 

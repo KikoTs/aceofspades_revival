@@ -57,6 +57,12 @@ class RevivalLobbyFacade(object):
         self._last_lobby_id = 0
         self._pending_settings = {}
         self._pending_member_data = {}
+        # A batch leaves ``_pending_*`` the moment its request starts, so it is
+        # retained here until the service acknowledges it.  Without that, a sync
+        # response issued before the write lands hydrates the older server
+        # snapshot over the lobby and blanks the Match Settings panel.
+        self._inflight_settings = {}
+        self._inflight_member_data = {}
         self._pending_privacy = None
         self._pending_max_members = None
         self._flush_at = 0.0
@@ -149,7 +155,26 @@ class RevivalLobbyFacade(object):
             lobby["game_server"] = self._game_server_tuple(lobby["server_id"])
         else:
             lobby["game_server"] = None
+        self._apply_local_overlay(lobby)
         return lobby
+
+    def _apply_local_overlay(self, lobby):
+        """Keep unacknowledged local edits visible over an older snapshot.
+
+        Every hydration path replaces ``data``/``member_data`` wholesale with
+        what the service last stored.  Queued and in-flight writes are replayed
+        on top so a sync that crosses a local edit cannot momentarily erase the
+        playlist, map rotation, or port the host is about to start with.
+        """
+        user_id = self.user_id()
+        with self._lock:
+            if _integer(lobby.get("owner"), 0) == user_id:
+                lobby["data"].update(self._inflight_settings)
+                lobby["data"].update(self._pending_settings)
+            if user_id and user_id in (lobby.get("members") or ()):
+                own_data = lobby["member_data"].setdefault(user_id, {})
+                own_data.update(self._inflight_member_data)
+                own_data.update(self._pending_member_data)
 
     def _game_server_tuple(self, identifier):
         try:
@@ -231,16 +256,6 @@ class RevivalLobbyFacade(object):
         self._apply_friends(snapshot)
         lobby_payload = snapshot.get("lobby")
         lobby = self._hydrate_lobby(lobby_payload)
-        if lobby is not None:
-            # A sync response can land while a newer local edit is waiting for
-            # the serialized writer.  Keep those optimistic values visible and
-            # ensure the later write is not replaced by the older revision.
-            with self._lock:
-                lobby["data"].update(self._pending_settings)
-                own_data = lobby["member_data"].setdefault(
-                    self.user_id(), {}
-                )
-                own_data.update(self._pending_member_data)
         lobby_id = _integer(lobby_payload.get("id"), 0) if isinstance(lobby_payload, dict) else 0
         member_ids = set(lobby["members"] if lobby is not None else [])
         callbacks = self.state["callbacks"]
@@ -292,6 +307,7 @@ class RevivalLobbyFacade(object):
             revision = _text(lobby.get("revision")) or u"1"
             settings = dict(lobby.get("data") or {})
             self._pending_settings.clear()
+            self._inflight_settings = pending
             self._pending_privacy = None
             self._pending_max_members = None
             self._settings_request_active = True
@@ -306,11 +322,11 @@ class RevivalLobbyFacade(object):
 
         def succeeded(result):
             self._settings_request_active = False
+            with self._lock:
+                self._inflight_settings = {}
             payload = (result or {}).get("lobby")
             hydrated = self._hydrate_lobby(payload)
             if hydrated is not None:
-                with self._lock:
-                    hydrated["data"].update(self._pending_settings)
                 self.queue_callback(
                     self.state["callbacks"].get("lobby_data_changed"),
                     hydrated["id"], True,
@@ -321,7 +337,11 @@ class RevivalLobbyFacade(object):
         def failed(error):
             self._settings_request_active = False
             with self._lock:
-                self._pending_settings.update(pending)
+                # Newer queued edits win over the batch being restored.
+                restored = dict(self._inflight_settings)
+                restored.update(self._pending_settings)
+                self._pending_settings = restored
+                self._inflight_settings = {}
                 if privacy is not None:
                     self._pending_privacy = privacy
                 if max_members is not None:
@@ -330,6 +350,14 @@ class RevivalLobbyFacade(object):
                 self.state["callbacks"].get("lobby_data_changed"),
                 lobby_id, False,
             )
+            if getattr(error, "code", "") == "lobby_revision_conflict":
+                # Our cached revision is behind the service (Start and Publish
+                # both bump it).  Retrying with the same one only repeats the
+                # 409 forever and the host's edits are never stored, so refresh
+                # the authoritative snapshot before the next attempt.
+                self.client.sync_now()
+                self._flush_at = time.time() + 0.25
+                return
             self._flush_at = time.time() + 1.0
 
         self.client.lobby_action(
@@ -348,17 +376,23 @@ class RevivalLobbyFacade(object):
             lobby = self.ensure_lobby(lobby_id)
             data = dict(lobby["member_data"].get(self.user_id(), {}))
             self._pending_member_data.clear()
+            self._inflight_member_data = pending
             self._member_request_active = True
 
         def succeeded(result):
             self._member_request_active = False
+            with self._lock:
+                self._inflight_member_data = {}
             if self._pending_member_data:
                 self._flush_at = time.time() + 0.05
 
         def failed(error):
             self._member_request_active = False
             with self._lock:
-                self._pending_member_data.update(pending)
+                restored = dict(self._inflight_member_data)
+                restored.update(self._pending_member_data)
+                self._pending_member_data = restored
+                self._inflight_member_data = {}
             self._flush_at = time.time() + 1.0
 
         self.client.lobby_action(
@@ -373,6 +407,12 @@ class RevivalLobbyFacade(object):
         lobby = self.ensure_lobby(lobby_id)
         key = _text(key)
         value = _text(value)
+        # The retail lobby rewrites its whole settings block on every refresh
+        # tick.  ``data`` already carries queued and in-flight local edits, so
+        # an identical value is either stored or on its way and must not queue
+        # another revisioned write.
+        if lobby["data"].get(key) == value:
+            return True
         lobby["data"][key] = value
         with self._lock:
             self._pending_settings[key] = value
@@ -387,6 +427,8 @@ class RevivalLobbyFacade(object):
         data = lobby["member_data"].setdefault(self.user_id(), {})
         key = _text(key)
         value = _text(value)
+        if data.get(key) == value:
+            return True
         data[key] = value
         with self._lock:
             self._pending_member_data[key] = value
@@ -514,7 +556,9 @@ class RevivalLobbyFacade(object):
         values = {}
         if invitation_id:
             values["invitation_id"] = invitation_id
-        self.client.lobby_action(lobby_id, "join", succeeded, failed, **values)
+        self.client.lobby_action(
+            lobby_id, "join", succeeded, failed, priority=True, **values
+        )
         return True
 
     def leave_lobby(self, success=None, error=None):
@@ -536,7 +580,9 @@ class RevivalLobbyFacade(object):
                 self.queue_callback(error, reason)
 
         if self.available():
-            self.client.lobby_action(lobby_id, "leave", finished, failed)
+            self.client.lobby_action(
+                lobby_id, "leave", finished, failed, priority=True
+            )
         else:
             finished(None)
 
@@ -544,7 +590,9 @@ class RevivalLobbyFacade(object):
         lobby_id = _integer(self.state.get("current_lobby"), 0)
         if not lobby_id or not self.available():
             return False
-        return self.client.lobby_action(lobby_id, "chat", message=_text(message))
+        return self.client.lobby_action(
+            lobby_id, "chat", priority=True, message=_text(message)
+        )
 
     def enumerate_lobbies(self, callback, friends_only=False):
         if not self.available():
@@ -573,7 +621,8 @@ class RevivalLobbyFacade(object):
         if not lobby_id or not self.available():
             return False
         return self.client.lobby_action(
-            lobby_id, "invite", success, error, target=_text(friend_id)
+            lobby_id, "invite", success, error, priority=True,
+            target=_text(friend_id)
         )
 
     def find_player(self, query, success=None, error=None):
@@ -598,14 +647,16 @@ class RevivalLobbyFacade(object):
         lobby_id = _integer(self.state.get("current_lobby"), 0)
         if not lobby_id or not self.available():
             return False
-        return self.client.lobby_action(lobby_id, "start", success, error)
+        return self.client.lobby_action(
+            lobby_id, "start", success, error, priority=True
+        )
 
     def publish(self, relay_lobby_id, server_id, success=None, error=None):
         lobby_id = _integer(self.state.get("current_lobby"), 0)
         if not lobby_id or not self.available():
             return False
         return self.client.lobby_action(
-            lobby_id, "publish", success, error,
+            lobby_id, "publish", success, error, priority=True,
             relay_lobby_id=relay_lobby_id, server_id=server_id,
         )
 
@@ -614,21 +665,24 @@ class RevivalLobbyFacade(object):
         if not lobby_id or not self.available():
             return False
         return self.client.lobby_action(
-            lobby_id, "start_failed", success, error, message=_text(message)
+            lobby_id, "start_failed", success, error, priority=True,
+            message=_text(message)
         )
 
     def mark_in_game(self, success=None, error=None):
         lobby_id = _integer(self.state.get("current_lobby"), 0)
         if not lobby_id or not self.available():
             return False
-        return self.client.lobby_action(lobby_id, "in_game", success, error)
+        return self.client.lobby_action(
+            lobby_id, "in_game", success, error, priority=True
+        )
 
     def game_ticket(self, server_id, success=None, error=None):
         if not self.available():
             return False
         return self.client.enqueue(
             "game_ticket", (_text(server_id),),
-            success=success, error=error,
+            success=success, error=error, priority=True,
         )
 
 

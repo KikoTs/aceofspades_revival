@@ -231,9 +231,13 @@ class LoadingMenu(MenuScene):
                 self.tabs.append(tab_scores)
 
     def on_stop(self):
+        # The join code must outlive this menu: the client only sends the name
+        # bearing NewPlayerConnection once a class is confirmed, which happens
+        # after the loading screen is gone.  ``restore_when_accepted`` gives the
+        # nickname back once the server has actually let the player in.
         try:
             import revival_wire_identity
-            revival_wire_identity.restore(self.manager)
+            revival_wire_identity.restore_when_accepted(self.manager)
         except Exception:
             pass
         super(LoadingMenu, self).on_stop()
@@ -545,14 +549,9 @@ class LoadingMenu(MenuScene):
         #     self.password_box.set('')
         #     self.password_box.visible = True
         if packet.id == InitialInfo.id:
-            # The one-use join code has now been accepted by the authoritative
-            # server.  Restore the canonical nickname before world/player UI
-            # initializes; the server already owns the verified display name.
-            try:
-                import revival_wire_identity
-                revival_wire_identity.restore(self.manager)
-            except Exception:
-                pass
+            # InitialInfo only means the map is on its way.  The join code is
+            # still unspent at this point: it is sent with NewPlayerConnection
+            # when the player confirms a class, several menus later.
             if self.initial_info_packet_count > 0:
                 self.current_part = 0
             self.initial_info_packet_count += 1

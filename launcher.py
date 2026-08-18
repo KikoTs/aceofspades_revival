@@ -1772,7 +1772,9 @@ class Launcher(object):
         self._refresh_friends_dialog()
 
     def _social_action_error(self, error):
-        message = display_text(error) or "The social action could not be completed."
+        from revival_api import player_facing_message
+        message = (display_text(player_facing_message(error))
+                   or "The social action could not be completed.")
         self.set_status(message, error=True)
         parent = self._friends_dialog if self._friends_dialog is not None else self.root
         try:
@@ -2148,7 +2150,12 @@ def game_start():
         )
         raise SystemExit(1)
     try:
-        import run  # noqa: F401 — importing boots the recovered game client
+        # Import first, then boot.  The client main loop must not run inside an
+        # import statement: CPython 2 keeps its global import lock held for the
+        # whole import, which would deadlock every background thread that
+        # imports anything (social sync, relay allocation, lazy stdlib imports).
+        import run
+        run.boot()
     except SystemExit:
         raise
     except Exception as error:

@@ -442,7 +442,6 @@ class BootClass:
 
     def __init__(self):
         global loadingscreen
-        from shared.constants import A2265
         print 'Hiding cursor'
         cursor_image = load_image('cursor')
         cursor = pyglet.window.ImageMouseCursor(cursor_image, 6, cursor_image.height - 4)
@@ -466,6 +465,9 @@ class BootClass:
         print 'Game manager created'
         loadingscreen.finished()
         pyglet.clock.schedule_once(self.main, 0)
+
+    def run(self):
+        from shared.constants import A2265
         if A2265:
             import cProfile
             profile_name = 'profile.dat'
@@ -479,4 +481,15 @@ class BootClass:
             reactor.run()
 
 
-BootClass()
+def boot():
+    """Create the client and enter its main loop.
+
+    Callers must invoke this *outside* an ``import`` statement.  CPython 2 holds
+    one global import lock for the entire duration of an import, and it is not
+    released until the outermost import returns.  Running the game loop inside
+    ``import aoslib.run`` therefore froze every background thread that reaches
+    an ``import`` -- the social HTTPS worker, the relay allocation worker, and
+    lazy standard-library imports such as ``urlparse``'s ``unicodedata`` -- so
+    Create Match and Start Game queued their requests and never completed.
+    """
+    BootClass().run()

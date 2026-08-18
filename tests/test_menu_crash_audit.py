@@ -91,17 +91,28 @@ def make_lobby(callback):
     )
 
 
+def cancel_globals(stopped=None):
+    """Names ``do_cancel_game`` resolves from its module scope."""
+    return {
+        "local_host": SimpleNamespace(
+            stop_active_session=(
+                (lambda manager: stopped.append(manager))
+                if stopped is not None
+                else (lambda manager: None)
+            )
+        ),
+        "strings": SimpleNamespace(WAITING_FOR_HOST="WAITING FOR HOST"),
+        "SteamSetLobbyMemberData": lambda key, value: None,
+    }
+
+
 def test_lobby_cancel_ignores_an_expired_delayed_call():
     stopped = []
     do_cancel_game = load_method(
         "aoslib/scenes/frontend/baseSquadLobbyMenu.py",
         "BaseSquadLobbyMenu",
         "do_cancel_game",
-        {
-            "local_host": SimpleNamespace(
-                stop_active_session=lambda manager: stopped.append(manager)
-            )
-        },
+        cancel_globals(stopped),
     )
     delayed_call = FakeDelayedCall(active=False)
     menu = make_lobby(delayed_call)
@@ -119,11 +130,7 @@ def test_lobby_cancel_cancels_an_active_delayed_call_once():
         "aoslib/scenes/frontend/baseSquadLobbyMenu.py",
         "BaseSquadLobbyMenu",
         "do_cancel_game",
-        {
-            "local_host": SimpleNamespace(
-                stop_active_session=lambda manager: None
-            )
-        },
+        cancel_globals(),
     )
     delayed_call = FakeDelayedCall(active=True)
     menu = make_lobby(delayed_call)

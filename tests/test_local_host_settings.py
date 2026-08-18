@@ -155,3 +155,116 @@ def test_preflight_failure_restores_button_and_shows_exact_error(monkeypatch):
     assert menu.starting_game is False
     assert "bad port" in manager.big_text.text
     assert manager.big_text_timer == 8.0
+
+
+# ---------------------------------------------------------------------------
+# A finished, kicked or crashed match leaves the authoritative lobby in
+# ``starting`` / ``in_game`` with a ``server_id`` for a server nobody runs.
+# ``start`` is accepted in that state and changes nothing, so the host's next
+# Start allocated a rate-limited relay the lobby never adopted and appeared to
+# do nothing at all.  ``start_failed`` is the only transition back to
+# ``forming``, and the only thing that clears the dead endpoint.
+# ---------------------------------------------------------------------------
+
+
+def make_start_environment(monkeypatch, state, scheduled):
+    class FakeClock:
+        @staticmethod
+        def schedule_once(callback, delay):
+            scheduled.append((callback, delay))
+
+        @staticmethod
+        def unschedule(callback):
+            scheduled[:] = [entry for entry in scheduled if entry[0] is not callback]
+
+        @staticmethod
+        def schedule_interval(callback, interval):
+            scheduled.append((callback, interval))
+
+    calls = []
+
+    def start_social(success, error):
+        calls.append("start")
+        return True
+
+    def start_failed(message, success=None, error=None):
+        calls.append("start_failed")
+        if callable(success):
+            success({"ok": True})
+        return True
+
+    fake_steam = SimpleNamespace(
+        SteamStartSocialLobby=start_social,
+        SteamSocialLobbyStartFailed=start_failed,
+        SteamGetSocialLobbyState=lambda: state,
+        SteamGetCurrentLobby=lambda: 77,
+        SteamGetLobbyData=lambda lobby_id, key: "",
+    )
+    monkeypatch.setitem(sys.modules, "pyglet", SimpleNamespace(clock=FakeClock))
+    monkeypatch.setitem(sys.modules, "shared.steam", fake_steam)
+    monkeypatch.setattr(local_host, "_lobby_values", lambda ugc: {})
+
+    manager = SimpleNamespace(
+        hosted_ugc_map_filename="",
+        big_text=SimpleNamespace(text=""),
+        big_text_timer=0.0,
+        set_big_text_message=lambda *args, **kwargs: None,
+    )
+    menu = SimpleNamespace(
+        starting_game=False,
+        ugc_mode=False,
+        manager=manager,
+        update_buttons_enabled_state=lambda: None,
+    )
+    return menu, calls
+
+
+@pytest.mark.parametrize("state", ["in_game", "ready", "starting"])
+def test_a_stuck_lobby_is_reclaimed_before_starting(monkeypatch, state):
+    scheduled = []
+    menu, calls = make_start_environment(monkeypatch, state, scheduled)
+
+    local_host.start_lobby(menu)
+
+    assert calls == ["start_failed", "start"], (
+        "starting a %s lobby is accepted but does nothing, so it must be "
+        "reclaimed first" % state
+    )
+
+
+def test_a_fresh_lobby_is_started_without_an_extra_round_trip(monkeypatch):
+    scheduled = []
+    menu, calls = make_start_environment(monkeypatch, "forming", scheduled)
+
+    local_host.start_lobby(menu)
+
+    assert calls == ["start"]
+
+
+def test_an_unreadable_state_still_starts(monkeypatch):
+    scheduled = []
+    menu, calls = make_start_environment(monkeypatch, "", scheduled)
+
+    local_host.start_lobby(menu)
+
+    assert calls == ["start"]
+
+
+def test_state_lookup_degrades_when_the_abi_lacks_the_accessor(monkeypatch):
+    monkeypatch.setitem(
+        sys.modules, "shared.steam", SimpleNamespace(SteamGetCurrentLobby=lambda: 0)
+    )
+
+    assert local_host.social_lobby_state() == ""
+
+
+def test_reclaiming_reports_a_service_failure_as_handled(monkeypatch):
+    def refuse(message, success=None, error=None):
+        raise RuntimeError("service down")
+
+    monkeypatch.setitem(
+        sys.modules, "shared.steam",
+        SimpleNamespace(SteamSocialLobbyStartFailed=refuse),
+    )
+
+    assert local_host.reclaim_social_lobby() is False

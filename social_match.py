@@ -3,8 +3,16 @@
 from __future__ import absolute_import
 
 
-def _show_error(menu, error):
+def _show_error(menu, error, server_id=None):
     menu._social_join_inflight = False
+    # The ticket minted for this endpoint is spent whether or not the join
+    # succeeded, so the lobby must not silently retry the same address.
+    marker = getattr(menu, "mark_social_server_failed", None)
+    if callable(marker):
+        try:
+            marker(server_id)
+        except Exception:
+            pass
     try:
         from shared.constants import A968
         menu.manager.set_big_text_message(A968, False, 6.0)
@@ -16,15 +24,33 @@ def _show_error(menu, error):
         pass
 
 
+def request_ticket(server_id, success, error=None):
+    """Mint one join code for an endpoint that does not have to be listed yet.
+
+    The master accepts this as soon as the relay allocation exists, so the
+    host's ticket is fetched while its server is still booting instead of after
+    the public listing round-trip.
+    """
+    if not server_id:
+        return False
+    try:
+        from shared.steam import SteamRequestSocialGameTicket
+        return bool(SteamRequestSocialGameTicket(server_id, success, error))
+    except Exception as caught:
+        if callable(error):
+            error(caught)
+        return False
+
+
 def connect(menu, server_id, local_identifier=None, previous_menu=None,
-            success_callback=None, error_callback=None):
-    """Request a fresh one-use ticket and enter LoadingMenu exactly once."""
+            success_callback=None, error_callback=None, ticket=None):
+    """Enter LoadingMenu exactly once with a one-use ticket for ``server_id``."""
     if not server_id or getattr(menu, "_social_join_inflight", False):
         return False
     menu._social_join_inflight = True
 
     def failed(error):
-        _show_error(menu, error)
+        _show_error(menu, error, server_id)
         if callable(error_callback):
             error_callback(error)
 
@@ -44,9 +70,15 @@ def connect(menu, server_id, local_identifier=None, previous_menu=None,
                 SteamSetLobbyMemberData("in-game", "1")
             except Exception:
                 pass
+            from shared.constants import SERVERMODE_CUSTOM
             parent.set_menu(
                 LoadingMenu,
                 identifier=identifier,
+                # A player-hosted match is a custom server.  Announcing it as
+                # SERVERMODE_PUBLIC makes the retail client apply its public
+                # matchmaking rules and refuse the join with "to connect to a
+                # ranked server, use the Ranked Match option".
+                server_mode=SERVERMODE_CUSTOM,
                 from_server_menu=True,
                 name="Revival Match",
                 previous_menu=previous_menu or type(menu),
@@ -57,13 +89,13 @@ def connect(menu, server_id, local_identifier=None, previous_menu=None,
         except Exception as error:
             failed(error)
 
-    try:
-        from shared.steam import SteamRequestSocialGameTicket
-        if not SteamRequestSocialGameTicket(server_id, ticket_ready, failed):
-            failed(RuntimeError("The social service is unavailable."))
-            return False
-    except Exception as error:
-        failed(error)
+    if ticket is not None:
+        # Already minted while the server was booting.
+        ticket_ready(ticket)
+        return True
+
+    if not request_ticket(server_id, ticket_ready, failed):
+        failed(RuntimeError("The social service is unavailable."))
         return False
     return True
 

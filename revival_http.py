@@ -16,6 +16,16 @@ try:
 except ImportError:
     from urllib.parse import urlsplit
 
+# ``request`` is only ever called from worker threads, and the game's main
+# thread holds CPython 2's import lock for its whole session, so the fallback
+# transport must already be resolved before that call.
+try:
+    import urllib.request as _urllib_request
+    import urllib.error as _urllib_error
+except ImportError:  # pragma: no cover - Python 2 runtime
+    import urllib2 as _urllib_request
+    _urllib_error = _urllib_request
+
 
 class HttpTransportError(Exception):
     pass
@@ -215,18 +225,12 @@ def request(url, method="GET", headers=None, body=None, timeout=10):
         return _windows_request(url, method, headers, body, timeout)
 
     # Development-only fallback for non-Windows source checks.
-    try:
-        import urllib.request as urllib_request
-        import urllib.error as urllib_error
-    except ImportError:
-        import urllib2 as urllib_request
-        urllib_error = urllib_request
-    request_value = urllib_request.Request(url, data=body, headers=headers)
+    request_value = _urllib_request.Request(url, data=body, headers=headers)
     request_value.get_method = lambda: method
     try:
-        response = urllib_request.urlopen(request_value, timeout=timeout)
+        response = _urllib_request.urlopen(request_value, timeout=timeout)
         return getattr(response, "code", 200), response.read()
-    except urllib_error.HTTPError as error:
+    except _urllib_error.HTTPError as error:
         return error.code, error.read()
     except Exception as error:
         raise HttpTransportError(str(error))

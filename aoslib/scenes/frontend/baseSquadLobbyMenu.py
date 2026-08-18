@@ -18,7 +18,7 @@ from aoslib.scenes.frontend.squadChatLog import *
 from aoslib.squadEventManager import *
 from twisted.internet import reactor
 from aoslib.tools import make_server_identifier, ip_to_int
-from shared.steam import SteamGetSessionTicket, SteamGetAllLobbyData, SteamActivateGameOverlayToStore
+from shared.steam import SteamGetSessionTicket, SteamGetAllLobbyData, SteamActivateGameOverlayToStore, SteamSocialLobbyStartFailed, SteamGetSocialLobbyState
 from shared.constants import ERROR_KICKED, SPADES_GAME_APP_ID
 from shared.constants_shop import DLC_APPID_LIST
 from aoslib.scenes.frontend.customServerJoiner import CustomServerJoiner
@@ -39,6 +39,9 @@ from shared.steam import game_version
 from shared.constants_prefabs import A3037
 PANEL_PREVIEW, PANEL_SETTINGS, PANEL_RULES, PANEL_PLAYLISTS, PANEL_UGC_MODE, PANEL_MAPS, PANEL_PREFAB_SETS = xrange(7)
 OPTION_TEAM1, OPTION_TEAM_NEUTRAL, OPTION_TEAM2, OPTION_KICK_PLAYER = xrange(4)
+# How long a freshly swapped-in action button ignores clicks.  Long enough to
+# absorb a double-click, short enough to stay invisible to a deliberate one.
+ACTION_BUTTON_REARM_SECONDS = 0.75
 
 class BaseSquadLobbyMenu(ListPreviewMenuBase):
     chat_log = None
@@ -48,6 +51,7 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
     enable_kick_button = False
     start_game_tick_callback = None
     server_finder = None
+    _failed_social_servers = frozenset()
     last_host_message = [
      strings.WAITING_FOR_HOST, 0.0]
     title = strings.MATCH_LOBBY
@@ -56,14 +60,7 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
 
     def initialize(self, ugc_mode=False):
         super(BaseSquadLobbyMenu, self).initialize(self.title)
-        # These used to survive as class attributes when the cached lobby
-        # menu was reopened after a failed host attempt.  A fresh lobby must
-        # never inherit "Waiting For Host" or an old reactor callback.
-        self.starting_game = False
-        self.start_game_timer = 0
-        self.start_game_tick_callback = None
-        self.server_finder = None
-        self.last_host_message = [strings.WAITING_FOR_HOST, 0.0]
+        self.reset_start_state()
         self.invite_button = None
         self.ugc_mode = ugc_mode
         self.__initialise_panels()
@@ -134,11 +131,85 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
         y = self.list_panel.y - LIST_PANEL_SPACING - 6
         self.invite_button = self.create_button(strings.INVITE, x, y, button_width, button_height, 18, self.on_invite_friends)
 
+    def reset_start_state(self):
+        """Drop every trace of a previous Start attempt.
+
+        ``MenuScene.set_menu`` keeps one cached instance per menu class, so
+        ``initialize`` runs only for the first visit.  Without this, reopening
+        the lobby after a failed or finished host attempt inherited
+        ``starting_game``, which hides Start behind a permanently disabled
+        "Waiting For Host" cancel button, plus a live countdown callback and a
+        stale server finder.  ``last_host_message`` is reassigned rather than
+        mutated because the class attribute is a shared mutable list.
+        """
+        self.starting_game = False
+        self.start_game_timer = 0
+        callback = self.start_game_tick_callback
+        self.start_game_tick_callback = None
+        if callback is not None and callback.active():
+            callback.cancel()
+        finder = self.server_finder
+        self.server_finder = None
+        if finder is not None:
+            finder.cancel()
+        self.last_host_message = [strings.WAITING_FOR_HOST, 0.0]
+        self._relay_lobby_start_nonce = None
+        self._social_join_inflight = False
+        self._social_join_server_id = None
+        self._failed_social_servers = set()
+        return
+
+    def mark_social_server_failed(self, server_id):
+        """Never spend a second one-use ticket on an endpoint that refused us."""
+        if not server_id:
+            return
+        try:
+            self._failed_social_servers.add(server_id)
+        except AttributeError:
+            self._failed_social_servers = set([server_id])
+
+    def restore_wire_identity(self):
+        """Put the player's own nickname back once they are out of a match.
+
+        The one-use join code lives in ``config.name`` for as long as the server
+        may still ask for it.  Every route back to a front-end menu has to undo
+        that, or the lobby would greet the player as ``~AbCd...``.
+        """
+        try:
+            import revival_wire_identity
+            revival_wire_identity.restore(self.manager)
+        except Exception:
+            pass
+
+    def reclaim_finished_match(self):
+        """Make the lobby hostable again after a match, a kick or a crash.
+
+        Landing back here leaves the authoritative lobby in ``in_game`` with a
+        ``server_id`` for a server that is no longer running.  ``start`` is
+        accepted in that state but changes nothing, so Start Game appeared to do
+        nothing at all until the player left the lobby entirely.  Releasing the
+        old child also returns its rate-limited relay allocation.
+        """
+        if not SteamAmITheLobbyOwner():
+            return False
+        stale_server = SteamGetLobbyServerIdentifier()
+        local_host.release_finished_session(self.manager)
+        state = SteamGetSocialLobbyState()
+        if not state or state == 'forming':
+            return False
+        if stale_server:
+            self.mark_social_server_failed(stale_server)
+        local_host.reclaim_social_lobby()
+        return True
+
     def on_start(self, *arg, **kw):
         from aoslib.gamemanager import GameManager
         if GameManager.invalid_data_error:
             from selectMenu import SelectMenu
             self.parent.set_menu(SelectMenu, back=True)
+        self.reset_start_state()
+        self.restore_wire_identity()
+        self.reclaim_finished_match()
         self.media.stop_sounds()
         if not self.media.is_playing_music('mainmenu'):
             self.media.play_music('mainmenu', self.config.music_volume)
@@ -308,10 +379,48 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
 
             return
 
+    def action_buttons(self):
+        """The buttons that all share one screen position under the preview."""
+        return (
+         self.start_game_button, self.cancel_button, self.confirm_button,
+         self.join_game_button, self.buy_now_button)
+
+    def stamp_action_buttons(self):
+        """Record when each action button most recently became visible.
+
+        Start, Cancel, Confirm, Join and Buy are drawn at the same coordinates,
+        so pressing Start swaps Cancel in underneath the cursor within the same
+        frame.  A second click of an ordinary double-click then cancelled the
+        match the first click had just started.
+        """
+        now = time.time()
+        for button in self.action_buttons():
+            if button is None:
+                continue
+            was_visible = getattr(button, 'revival_was_visible', False)
+            if button.visible and not was_visible:
+                button.revival_armed_at = now
+            button.revival_was_visible = bool(button.visible)
+
+        return
+
+    def disarm_unsettled_action_buttons(self):
+        """Swallow a click aimed at whatever occupied this spot a moment ago."""
+        now = time.time()
+        for button in self.action_buttons():
+            if button is None or not button.pressed:
+                continue
+            armed_at = getattr(button, 'revival_armed_at', 0.0)
+            if now - armed_at < ACTION_BUTTON_REARM_SECONDS:
+                button.pressed = False
+
+        return
+
     def on_mouse_release(self, x, y, button, modifiers):
         if not self.enabled:
             return
         else:
+            self.disarm_unsettled_action_buttons()
             # Pyglet's Windows cursor can report a legacy release coordinate
             # one frame behind the relative cursor used to draw menu hover.
             # Preserve the visibly hovered Start button before child controls
@@ -400,6 +509,10 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
             return
 
     def update_buttons_enabled_state(self):
+        self.apply_buttons_enabled_state()
+        self.stamp_action_buttons()
+
+    def apply_buttons_enabled_state(self):
         is_lobby_owner = SteamAmITheLobbyOwner()
         member_in_game = any(map((lambda friend: friend.is_in_game), self.list_panel.rows))
         self.update_invite_button()
@@ -741,6 +854,11 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
             self.starting_game = False
             server_id = SteamGetLobbyServerIdentifier()
             if server_id:
+                if server_id in self._failed_social_servers:
+                    # That endpoint already refused or dropped us.  Rejoining it
+                    # burns another one-use ticket and reports the misleading
+                    # "use Ranked Match" disconnect; wait for a fresh Start.
+                    return
                 if self._social_join_server_id == server_id and self._social_join_inflight:
                     return
                 self._social_join_server_id = server_id
@@ -751,12 +869,13 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
                     previous_menu=type(self),
                 )
                 return
-            server = SteamGetLobbyGameServer()
-            if server:
-                from aoslib.scenes.ingame_menus.loadingMenu import LoadingMenu
-                identifier = make_server_identifier(server[0], server[1])
-                SteamSetLobbyMemberData('in-game', '1')
-                self.parent.set_menu(LoadingMenu, identifier=identifier, from_server_menu=True, name='Private server', previous_menu=type(self))
+            # No ``server_id`` means no ticketed endpoint exists yet.  The stock
+            # address-only path below would reach the host's server as an
+            # unverified player, and it answers that with the disconnect the
+            # retail client renders as "to connect to a ranked server, use the
+            # Ranked Match option".  Wait for the host instead.
+            if SteamGetLobbyGameServer():
+                self.last_host_message = [strings.WAITING_FOR_HOST, time.time()]
 
     def on_buy_now(self):
         self.media.play('menu_buyA', zone=HUD_AUDIO_ZONE)
@@ -776,16 +895,33 @@ class BaseSquadLobbyMenu(ListPreviewMenuBase):
             self.do_cancel_game()
 
     def do_cancel_game(self):
+        was_starting = self.starting_game
         # Revival: stop the bundled local server we may have spawned for this
         # lobby so its hidden process is never orphaned.
         local_host.stop_active_session(self.manager)
         self.starting_game = False
+        # An allocation still in flight is keyed on this nonce; dropping it here
+        # makes the worker release its relay instead of launching into a lobby
+        # the player has already cancelled.
+        self._relay_lobby_start_nonce = None
+        self._social_join_inflight = False
+        self._social_join_server_id = None
+        self.last_host_message = [strings.WAITING_FOR_HOST, 0.0]
         callback = self.start_game_tick_callback
         self.start_game_tick_callback = None
         if callback is not None and callback.active():
             callback.cancel()
         if self.server_finder:
             self.server_finder.cancel()
+        if was_starting:
+            # Return the authoritative lobby to its idle state.  Without this it
+            # stays "starting" and the next Start is rejected, which the host
+            # sees as a Start button that simply stops working.
+            try:
+                SteamSocialLobbyStartFailed(u'The host cancelled the match.')
+                SteamSetLobbyMemberData('in-game', '0')
+            except Exception:
+                pass
         if self.start_game_button:
             self.update_buttons_enabled_state()
         return

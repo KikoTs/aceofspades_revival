@@ -53,6 +53,20 @@ WINDOWS_OWNER_QUERY_POLL_SECONDS = 0.01
 WINDOWS_OWNER_QUERY_MAX_BYTES = 4 * 1024 * 1024
 SOCIAL_LOBBY_START_TIMEOUT_SECONDS = 20.0
 RELAY_ALLOCATION_TIMEOUT_SECONDS = 12.0
+# Hosting crosses four services before the map appears.  Naming the current one
+# on the lobby's own button is the difference between "the menu is frozen" and
+# "it is doing something"; the retail UI has no other place to say it.
+#
+# Keep every label as short and as upper-case as the stock button captions.  The
+# action button is one line of 332x50 at size 22, and a caption that has to wrap
+# drives ``get_resized_font_and_formatted_text_to_fit_boundaries`` down through
+# font sizes until the glyphs stop rendering.
+PROGRESS_RECLAIMING = u"RESETTING..."
+PROGRESS_RESERVING = u"RESERVING..."
+PROGRESS_ALLOCATING = u"ALLOCATING..."
+PROGRESS_STARTING = u"STARTING..."
+PROGRESS_WAITING_FOR_SERVER = u"LAUNCHING..."
+PROGRESS_JOINING = u"JOINING..."
 _A2S_INFO_QUERY = b"\xff\xff\xff\xffTSource Engine Query\x00"
 
 _ACTIVE_SESSION = None
@@ -473,8 +487,14 @@ def build_session_toml(settings, kind="match"):
         "enabled = false",
         "",
         "[logging]",
-        "level = \"INFO\"",
-        "console = false",
+        "level = %s" % _toml_string(
+            "DEBUG" if os.environ.get("AOS_LOCAL_SERVER_DEBUG") else "INFO"
+        ),
+        # Opt-in: the child's stdout is captured into the session directory, so
+        # this is the only way to see why a server refused a join.
+        "console = %s" % (
+            "true" if os.environ.get("AOS_LOCAL_SERVER_DEBUG") else "false"
+        ),
         "packet_trace = false",
     ])
 
@@ -1114,6 +1134,123 @@ def _terrain_from_map(map_name):
     return mapping.get(key)
 
 
+def social_lobby_state():
+    """Return the authoritative lobby state, or "" when it cannot be read.
+
+    Reclaiming is an optimization over a lobby that is already hostable, so an
+    ABI without the accessor simply starts the way it always did.
+    """
+
+    try:
+        from shared.steam import SteamGetSocialLobbyState
+        return _text(SteamGetSocialLobbyState())
+    except Exception:
+        return u""
+
+
+def reclaim_social_lobby(success=None, error=None):
+    """Return an abandoned lobby to the only state that can be started again.
+
+    The service exposes no "match over" verb.  ``start_failed`` is the single
+    transition back to ``forming``, and it is also the only thing that clears a
+    ``server_id`` still pointing at a server nobody is running.  Sending
+    ``start`` instead is accepted and does nothing, which is why a host who was
+    kicked could never host again from the lobby it landed back in.
+    """
+
+    try:
+        from shared.steam import SteamSocialLobbyStartFailed
+        return bool(SteamSocialLobbyStartFailed(
+            u"The previous match ended.", success, error
+        ))
+    except Exception as caught:
+        _append_local_host_log("could not reclaim the lobby: %s" % _text(caught))
+        return False
+
+
+def release_finished_session(manager=None, reason=u"The match ended."):
+    """Drop a local server we are no longer playing on, and free its relay.
+
+    Returning to the lobby with the child still registered keeps its public
+    listing and its relay allocation alive.  Those allocations are rate limited
+    per account, so leaking one per match is what eventually answers Start with
+    "too many attempts".
+    """
+
+    with _SESSION_LOCK:
+        session = _ACTIVE_SESSION
+    if session is None:
+        return False
+    server_id = None
+    public_lobby = getattr(session, "public_lobby", None)
+    if public_lobby is not None:
+        server_id = getattr(public_lobby, "server_id", None)
+    _append_local_host_log("releasing finished session: %s" % _text(reason), session)
+    stop_active_session(manager)
+    return server_id or True
+
+
+def _watch_local_session(menu, session):
+    """Notice our own server dying instead of waiting out the ENet timeout.
+
+    A killed or crashed child leaves the client sat in the world for the full
+    protocol timeout with no explanation, and leaves the lobby advertising an
+    endpoint that answers nothing.
+    """
+
+    from pyglet import clock
+
+    def poll(_dt):
+        with _SESSION_LOCK:
+            current = _ACTIVE_SESSION is session
+        if not current:
+            clock.unschedule(poll)
+            return
+        if session.is_running():
+            return
+        clock.unschedule(poll)
+        _append_local_host_log("hosted server exited unexpectedly", session)
+        public_lobby = getattr(session, "public_lobby", None)
+        server_id = getattr(public_lobby, "server_id", None)
+        stop_active_session(getattr(menu, "manager", None))
+        marker = getattr(menu, "mark_social_server_failed", None)
+        if callable(marker) and server_id:
+            try:
+                marker(server_id)
+            except Exception:
+                pass
+        reclaim_social_lobby()
+        try:
+            manager = getattr(menu, "manager", None)
+            if manager is not None:
+                manager.disconnect()
+        except Exception:
+            _append_local_host_log(
+                "could not disconnect from the dead server",
+                exc_info=sys.exc_info(),
+            )
+
+    clock.schedule_interval(poll, 1.0)
+
+
+def _report_host_progress(menu, stage):
+    """Name the current hosting stage on the lobby's own action button.
+
+    ``update_join_button_text`` already renders ``last_host_message`` while a
+    start is in progress, so this reuses the retail surface instead of adding
+    another overlay.  It is advisory only: a failure here never affects the
+    launch.
+    """
+
+    _append_local_host_log("stage: %s" % _text(stage))
+    try:
+        if not getattr(menu, "starting_game", False):
+            return
+        menu.last_host_message = [stage, time.time()]
+    except Exception:
+        pass
+
+
 def _show_local_error(menu, message):
     print("Local server launch failed: %s" % _text(message))
     menu.starting_game = False
@@ -1138,6 +1275,10 @@ def _connect_when_ready(menu, session, server_mode, name):
     render/menu scheduler itself, so a tiny interval callback attached from the
     button handler is the reliable main-thread boundary.  Socket work remains
     in the worker and never blocks a frame.
+
+    The host's join code and the public listing are both requested as soon as
+    the relay exists, so they overlap the server's boot instead of adding two
+    more round-trips after it.
     """
 
     from pyglet import clock
@@ -1190,63 +1331,111 @@ def _connect_when_ready(menu, session, server_mode, name):
                 % _text(error),
             )
 
-    def connect():
-        public_lobby = getattr(session, "public_lobby", None)
+    public_lobby = getattr(session, "public_lobby", None)
+    handoff = {"ticket": None, "ready": False, "joined": False}
+    publish_deadline = time.time() + 12.0
+
+    def still_current():
+        with _SESSION_LOCK:
+            return _ACTIVE_SESSION is session
+
+    def publish_failed(error):
+        if not still_current():
+            return
+        if (
+            getattr(error, "code", None) == "relay_not_ready"
+            and time.time() < publish_deadline
+        ):
+            clock.schedule_once(lambda _dt: publish(), 0.5)
+            return
+        message = "The public server could not be published: %s" % _text(error)
+        if handoff["joined"]:
+            # Listing now runs beside the host's own join instead of ahead of
+            # it, so a late failure must not evict a host who is already in the
+            # match.  Only invited players are affected.
+            _append_local_host_log(message, session)
+            return
+        _fail_session_if_current(menu, session, message)
+
+    def join_failed(error):
+        if not still_current():
+            return
+        _fail_session_if_current(
+            menu,
+            session,
+            "The host could not join its own match: %s" % _text(error),
+        )
+
+    def published(_result):
+        _append_local_host_log("public listing accepted", session)
+
+    def publish():
+        if not still_current():
+            return
+        try:
+            from shared.steam import SteamPublishSocialLobby
+            if not SteamPublishSocialLobby(
+                public_lobby.lobby_id,
+                public_lobby.server_id,
+                published,
+                publish_failed,
+            ):
+                raise LocalHostError("The social lobby service is unavailable.")
+        except Exception as error:
+            publish_failed(error)
+
+    def ticket_ready(ticket):
+        if not still_current():
+            return
+        handoff["ticket"] = ticket
+        _append_local_host_log("host join code minted", session)
+        try_join()
+
+    def ticket_failed(error):
+        if not still_current():
+            return
+        _fail_session_if_current(
+            menu,
+            session,
+            "The host join code could not be issued: %s" % _text(error),
+        )
+
+    def ticket_connected(_ticket):
+        try:
+            from shared.steam import SteamMarkSocialLobbyInGame
+            SteamMarkSocialLobbyInGame()
+        except Exception:
+            pass
+
+    def try_join():
+        """Enter the loading screen once the server answers and we hold a code."""
+        if handoff["joined"] or not handoff["ready"] or not still_current():
+            return
         if public_lobby is None:
+            handoff["joined"] = True
+            _watch_local_session(menu, session)
             open_loading("127.0.0.1:%d" % session.port)
             return
-
-        publish_deadline = time.time() + 12.0
-
-        def publish_failed(error):
-            if (
-                getattr(error, "code", None) == "relay_not_ready"
-                and time.time() < publish_deadline
-            ):
-                clock.schedule_once(lambda _dt: publish(), 0.5)
-                return
-            _fail_session_if_current(
+        if handoff["ticket"] is None:
+            return
+        handoff["joined"] = True
+        _report_host_progress(menu, PROGRESS_JOINING)
+        _watch_local_session(menu, session)
+        try:
+            import social_match
+            if not social_match.connect(
                 menu,
-                session,
-                "The public server could not be published: %s" % _text(error),
-            )
-
-        def ticket_connected(_ticket):
-            try:
-                from shared.steam import SteamMarkSocialLobbyInGame
-                SteamMarkSocialLobbyInGame()
-            except Exception:
-                pass
-
-        def published(_result):
-            try:
-                import social_match
-                if not social_match.connect(
-                    menu,
-                    public_lobby.server_id,
-                    local_identifier="127.0.0.1:%d" % session.port,
-                    previous_menu=type(menu),
-                    success_callback=ticket_connected,
-                    error_callback=publish_failed,
-                ):
-                    raise LocalHostError("The host join ticket could not be requested.")
-            except Exception as error:
-                publish_failed(error)
-
-        def publish():
-            try:
-                from shared.steam import SteamPublishSocialLobby
-                if not SteamPublishSocialLobby(
-                    public_lobby.lobby_id,
-                    public_lobby.server_id,
-                    published,
-                    publish_failed,
-                ):
-                    raise LocalHostError("The social lobby service is unavailable.")
-            except Exception as error:
-                publish_failed(error)
-
-        publish()
+                public_lobby.server_id,
+                local_identifier="127.0.0.1:%d" % session.port,
+                previous_menu=type(menu),
+                success_callback=ticket_connected,
+                error_callback=join_failed,
+                ticket=handoff["ticket"],
+            ):
+                raise LocalHostError("The host join ticket could not be used.")
+        except Exception as error:
+            handoff["joined"] = False
+            join_failed(error)
 
     def poll_result(_dt):
         if not poll_started[0]:
@@ -1256,16 +1445,15 @@ def _connect_when_ready(menu, session, server_mode, name):
             finished = result["finished"]
             error = result["error"]
         if not finished:
-            with _SESSION_LOCK:
-                current = _ACTIVE_SESSION is session
-            if not current:
+            if not still_current():
                 clock.unschedule(poll_result)
             return
         clock.unschedule(poll_result)
         if error is not None:
             _fail_session_if_current(menu, session, error)
             return
-        connect()
+        handoff["ready"] = True
+        try_join()
 
     def worker():
         _append_local_host_log("readiness worker started", session)
@@ -1303,6 +1491,19 @@ def _connect_when_ready(menu, session, server_mode, name):
     _append_local_host_log("armed pyglet readiness poll", session)
     clock.schedule_interval(poll_result, 0.05)
 
+    if public_lobby is not None:
+        # Both of these only need the relay allocation, so they run while the
+        # server boots rather than adding their round-trips after it.
+        _report_host_progress(menu, PROGRESS_WAITING_FOR_SERVER)
+        import social_match
+        if not social_match.request_ticket(
+            public_lobby.server_id, ticket_ready, ticket_failed
+        ):
+            ticket_failed(LocalHostError("The social service is unavailable."))
+        publish()
+    else:
+        _report_host_progress(menu, PROGRESS_WAITING_FOR_SERVER)
+
 
 def _launch_runtime(menu, kind, settings, project=None, public_lobby=None):
     """Create, spawn, and asynchronously connect one menu-owned local host."""
@@ -1336,6 +1537,7 @@ def _launch_runtime(menu, kind, settings, project=None, public_lobby=None):
             )
             public_lobby.stop()
             raise LocalHostError("The public relay could not authenticate: %s" % _text(error))
+    _report_host_progress(menu, PROGRESS_STARTING)
     bundle = resolve_server_bundle()
     session_dir, config_path = create_session_config(settings, kind=kind)
     client_root = application_root()
@@ -1378,8 +1580,13 @@ def _launch_runtime(menu, kind, settings, project=None, public_lobby=None):
         menu.update_buttons_enabled_state()
     except Exception:
         pass
-    from shared.constants import A2389, A2387
-    server_mode = A2389 if kind == "tutorial" else A2387
+    from shared.constants import SERVERMODE_TUTORIAL, SERVERMODE_CUSTOM
+    # Everything this module launches is a player-hosted custom server; only
+    # the tutorial has its own mode.  Presenting a private match as a public
+    # one makes the retail client refuse to join it.
+    server_mode = (
+        SERVERMODE_TUTORIAL if kind == "tutorial" else SERVERMODE_CUSTOM
+    )
     title = "Tutorial" if kind == "tutorial" else ("Map Creator" if kind == "ugc" else "Local Match")
     _connect_when_ready(menu, session, server_mode, title)
     return session
@@ -1414,6 +1621,7 @@ def start_lobby(menu):
     # Give immediate, unambiguous UI feedback before settings normalization or
     # any network request.  Every failure path below restores this state.
     menu.starting_game = True
+    _report_host_progress(menu, PROGRESS_RESERVING)
     try:
         menu.update_buttons_enabled_state()
     except Exception:
@@ -1473,6 +1681,7 @@ def start_lobby(menu):
             _append_local_host_log(
                 "Social lobby acknowledged Start; allocating public relay."
             )
+            _report_host_progress(menu, PROGRESS_ALLOCATING)
             result = {"finished": False, "lobby": None, "error": None}
             result_lock = threading.RLock()
             allocation_deadline = time.time() + RELAY_ALLOCATION_TIMEOUT_SECONDS
@@ -1554,8 +1763,27 @@ def start_lobby(menu):
             start_ack_timeout,
             SOCIAL_LOBBY_START_TIMEOUT_SECONDS,
         )
-        if not SteamStartSocialLobby(begin_allocation, start_failed):
-            start_failed("The social lobby service is unavailable.")
+
+        def begin_start(_result=None):
+            if getattr(menu, "_relay_lobby_start_nonce", None) != nonce:
+                return
+            if not SteamStartSocialLobby(begin_allocation, start_failed):
+                start_failed("The social lobby service is unavailable.")
+
+        state = social_lobby_state()
+        if state and state != u"forming":
+            # A finished or abandoned match leaves the lobby in ``starting`` or
+            # ``in_game``.  ``start`` is accepted there but changes nothing, so
+            # the relay this Start allocates would never be adopted and the host
+            # would appear unable to host at all.  Reclaim the lobby first.
+            _append_local_host_log(
+                "lobby is still %s; reclaiming it before Start." % state
+            )
+            _report_host_progress(menu, PROGRESS_RECLAIMING)
+            if not reclaim_social_lobby(begin_start, start_failed):
+                begin_start()
+        else:
+            begin_start()
     except Exception as error:
         _append_local_host_log(
             "Match Lobby Start preflight failed: %s" % _text(error),

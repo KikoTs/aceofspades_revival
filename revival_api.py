@@ -5,6 +5,15 @@ from __future__ import print_function
 import json
 import os
 
+# Every social method below runs on the client's HTTPS worker thread.  The game
+# boots inside ``import aoslib.run``, so its main thread owns CPython 2's global
+# import lock for the whole session; an ``import`` statement executed on any
+# other thread would block forever.  Resolve these names at module import time.
+try:
+    from urllib import quote as url_quote
+except ImportError:  # pragma: no cover - Python 3 test runs
+    from urllib.parse import quote as url_quote
+
 from revival_crypto import b64url_encode, new_seed, public_key, sign
 from revival_http import HttpTransportError, request as http_request
 from revival_store import (
@@ -54,6 +63,29 @@ def service_unavailable(error):
         error.code in ("network_error", "invalid_response", "invalid_server_list")
         or error.status is not None and error.status >= 500
     )
+
+
+def player_facing_message(error):
+    """Describe an API failure without blaming the player's session.
+
+    A 5xx means the service could not do its job right now.  Repeating the
+    raw wording ("Authentication is temporarily unavailable") reads as "you
+    are signed out", which sends players off to re-login over an outage they
+    cannot do anything about.
+    """
+
+    status = getattr(error, "status", None)
+    code = getattr(error, "code", "")
+    if code == "network_error":
+        return (u"Could not reach the Revival service. Check your"
+                u" connection and try again.")
+    if status is not None and status >= 500:
+        return (u"The Revival service is temporarily unavailable."
+                u" Your sign-in is still fine - please try again shortly.")
+    if code == "authentication_required":
+        return u"Sign in again to use this feature."
+    message = getattr(error, "message", None) or _text(error)
+    return message or u"The Revival service could not complete this action."
 
 
 def _text(value):
@@ -369,20 +401,16 @@ class RevivalClient(object):
                 "Social features require an online Revival account.",
                 "authentication_required",
             )
-        try:
-            from urllib import quote
-        except ImportError:
-            from urllib.parse import quote
         query = [
-            "cursor=" + quote(str(cursor or "0")),
-            "client_instance_id=" + quote(str(client_instance_id)),
-            "status=" + quote(str(status or "online")),
+            "cursor=" + url_quote(str(cursor or "0")),
+            "client_instance_id=" + url_quote(str(client_instance_id)),
+            "status=" + url_quote(str(status or "online")),
         ]
         if metadata:
             encoded = json.dumps(metadata, separators=(",", ":"))
             if not isinstance(encoded, bytes):
                 encoded = encoded.encode("utf-8")
-            query.append("metadata=" + quote(encoded))
+            query.append("metadata=" + url_quote(encoded))
         return self._request(
             "/api/social/sync?" + "&".join(query),
             token=token,
@@ -407,12 +435,8 @@ class RevivalClient(object):
             raise RevivalApiError("Sign in to use Friends.", "authentication_required")
         path = "/api/social/friends"
         if query:
-            try:
-                from urllib import quote
-            except ImportError:
-                from urllib.parse import quote
             value = query.encode("utf-8") if not isinstance(query, bytes) else query
-            path += "?query=" + quote(value)
+            path += "?query=" + url_quote(value)
         return self._request(path, token=token, timeout=6)
 
     def social_friend_action(self, action, target):

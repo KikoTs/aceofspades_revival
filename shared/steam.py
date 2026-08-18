@@ -952,6 +952,10 @@ _state = {
     "overlay_active": False,
     "overlay_changed": False,
     "persona_name": u"",
+    # A one-use relay join code is presented in place of the nickname for the
+    # duration of a join handshake.  It has to sit here rather than in the
+    # client config, because the wire name the game sends comes from SteamGetPersonaName.
+    "wire_name_override": u"",
     "language": u"english",
     "steam_id": 0,
     "current_lobby": 0,
@@ -1286,6 +1290,12 @@ def SteamIsDemoRunning():
 
 
 def SteamGetPersonaName():
+    # While a match join is in flight this returns the one-use join code:
+    # the game puts this value in NewPlayerConnection, and an identity-required
+    # server refuses any name that is not a code.
+    override = _to_text(_state.get("wire_name_override"))
+    if override:
+        return override
     persona_name = _to_text(_state.get("persona_name")).strip()
     if persona_name:
         return persona_name
@@ -1959,6 +1969,23 @@ def SteamRequestSocialGameTicket(server_id, success_callback,
 def SteamGetLobbyServerIdentifier():
     lobby = _current_lobby()
     return _to_text(lobby.get("server_id")) if lobby is not None else u""
+
+
+def SteamSetWireNameOverride(value):
+    """Present ``value`` as the player name on the wire, or clear it."""
+    _state["wire_name_override"] = _to_text(value)
+    return True
+
+
+def SteamGetSocialLobbyState():
+    """Return the authoritative lobby state: forming, starting or in_game.
+
+    A lobby left in ``starting`` or ``in_game`` accepts ``start`` and answers
+    ``ok`` without changing anything, so the host's next Start allocates a relay
+    that the lobby never adopts.  Callers use this to reclaim the lobby first.
+    """
+    lobby = _current_lobby()
+    return _to_text(lobby.get("social_state")) if lobby is not None else u""
 
 
 def SteamIsGameOverlayActive():

@@ -92,10 +92,28 @@ if '+debug' in sys.argv:
         else:
             print 'Optional debugger viewer not found: %s' % debugger_path
 
+_client = None
 try:
-    import aoslib.run
+    import aoslib.run as _client
 except SystemExit:
     pass
+
+
+def boot():
+    """Enter the client main loop once every module import has finished.
+
+    ``launcher.game_start`` reaches the client with ``import run``, and this
+    module reaches the client with ``import aoslib.run``.  CPython 2 holds a
+    single global import lock until the *outermost* import returns, so the loop
+    must not run inside either of them: a background thread that executes any
+    ``import`` would otherwise block for the rest of the session.
+    """
+    if _client is not None:
+        _client.boot()
+
+
+if __name__ == '__main__':
+    boot()
 
 # TODO : This should only be executed for standalone builds. How to detect that?
 #try:
