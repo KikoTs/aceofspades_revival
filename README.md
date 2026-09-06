@@ -1,4 +1,4 @@
-# AoS Revival Client
+# NO LONGER SUPPORTED - AoS Revival Client
 
 AoS Revival is a source-first maintenance and revival project for the Ace of Spades standalone client.
 
